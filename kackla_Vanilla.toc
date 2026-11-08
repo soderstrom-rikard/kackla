@@ -1,0 +1,10 @@
+## Interface: 11508, 11509
+## Author: soderstrom-rikard
+## Version: 0.0.1
+## Title: kackla
+## Notes: chat extension AddOn for World of Warcraft.
+## SavedVariables: KacklaDb
+## SavedVariablesPerCharacter: KacklaPerCharacterDb
+
+kackla.lua
+kackla.xml
