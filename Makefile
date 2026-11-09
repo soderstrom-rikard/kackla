@@ -9,5 +9,8 @@ all: *.lua *.toc *.xml *.tga
 	cp $? ${KACKLA_DIR}
 	rm ${KACKLA_DIR}/*.test.lua
 
+test:
+	lua kackla.test.lua
+
 clean:
 	rm -rf ${KACKLA_DIR}

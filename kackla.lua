@@ -108,9 +108,7 @@ end
 --
 --
 function kacklaFrameMixin:slashCommandHandler(msg, editBox)
-    local m = msg:gmatch("%S+")
-    local command = m()
-    local arg = m()
+    local _, _, command, arg = string.find(msg, "(%S+)%s*(.*)")
 
     local commands = self.slashCommands
     if commands[command] then
@@ -217,7 +215,7 @@ function kacklaFrameMixin:OnLoad()
             exec = function(lookup, format)
                 KacklaDb.format = format
             end,
-            help = "%s %s FORMAT\10    Sets the global format\10    use \\37 for %% and \\32 for space"
+            help = "%s %s FORMAT\10    Sets the global format"
         },
         ["getAlias"] = {
             exec = function(lookup)
@@ -241,7 +239,7 @@ function kacklaFrameMixin:OnLoad()
             exec = function(lookup, format)
                 KacklaPerCharacterDb.format = format
             end,
-            help = "%s %s FORMAT\10    Sets the player format\10    use \\37 for %% and \\32 for space"
+            help = "%s %s FORMAT\10    Sets the player format"
         },
         ["getPlayerAlias"] = {
             exec = function(lookup)
@@ -266,8 +264,8 @@ function kacklaFrameMixin:OnLoad()
                 local table_keys = {}
                 local index = 0
                 for k,_ in pairs(lookup) do
-                    table_keys[index] = k
                     index = index + 1
+                    table_keys[index] = k
                 end
                 table.sort(table_keys, function(left, right)
                     return left < right

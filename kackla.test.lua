@@ -34,10 +34,11 @@ sut = kacklaFrameMixin
 sut:OnLoad()
 sut.slashCommands.help.exec(sut.slashCommands)
 
+print("Generating updated README.md.out with an updated commands list")
 inCommandsSection = false
 fileObject = io.open( scriptDir .. "README.md.out", "w")
 for line in io.lines(scriptDir .. "README.md") do
-    if line == "## Bumping version" then
+    if line == "## Formatting" then
         inCommandsSection = false
 
         fileObject:write("\n```txt\n"
@@ -55,3 +56,39 @@ for line in io.lines(scriptDir .. "README.md") do
     end
 end
 fileObject:close()
+
+
+function checkSlashCommands()
+    print("Verify commands start")
+
+    -- Global tests
+    KacklaDb = {alias = nil, format = nil}
+    local alias = "tester"
+    sut:slashCommandHandler("setAlias tester")
+    assert(KacklaDb.alias == alias, "Failed to set alias to '" .. alias
+           .. "' got '" .. KacklaDb.alias .. "'")
+
+    KacklaDb = {alias = nil, format = nil}
+    local format = "[ %s ]%s "
+    sut:slashCommandHandler("setFormat " .. format)
+    assert(KacklaDb.format == format, "Failed to set format to '" .. format
+           .. "' got '" .. KacklaDb.format .. "'")
+
+    -- Player tests
+    KacklaPerCharacterDb = {alias = nil, format = nil}
+    local alias = ""
+    sut:slashCommandHandler("setPlayerAlias")
+    assert(KacklaPerCharacterDb.alias == alias, "Failed to set player alias to '" .. alias
+           .. "' got '" .. KacklaPerCharacterDb.alias .. "'")
+    assert(type(KacklaPerCharacterDb.alias) == "string", "expected string not " ..
+           type(KacklaPerCharacterDb.alias))
+
+    KacklaPerCharacterDb = {alias = nil, format = nil}
+    local format = "%s%s"
+    sut:slashCommandHandler("setPlayerFormat " .. format)
+    assert(KacklaPerCharacterDb.format == format, "Failed to set player format to '" .. format
+           .. "' got '" .. KacklaPerCharacterDb.format .. "'")
+    print("Verify commands done")
+end
+
+checkSlashCommands()

@@ -1,6 +1,6 @@
 ## Interface: 20506
 ## Author: soderstrom-rikard
-## Version: 0.0.3
+## Version: 0.0.4
 ## Title: kackla
 ## Notes: chat extension AddOn for World of Warcraft.
 ## SavedVariables: KacklaDb
