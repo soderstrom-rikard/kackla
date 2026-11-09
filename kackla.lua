@@ -27,7 +27,7 @@ end
 -- -> AceHook.hook(self, nil, "SendChatMessage", nil, false, false, true, true,  "Usage: RawHook([object], method, [handler], [hookSecure])")
 -- ---> _G[method] = uid
 function kacklaFrameMixin:registerHookCommand(command, hook, parent)
-    if not _G[command] then
+    if not parent[command] then
         print("Cannot register hook - command "
               .. command ..
               " does not exist in global table")
@@ -112,72 +112,7 @@ function kacklaFrameMixin:slashCommandHandler(msg, editBox)
     local command = m()
     local arg = m()
 
-    local commands = {
-        ["setAlias"] = {
-            exec = function(table, alias)
-                KacklaDb.alias = alias
-            end,
-            help = "%s %s ALIAS\10    Sets the global alias"
-        },
-        ["setFormat"] = {
-            exec = function(table, format)
-                KacklaDb.format = format
-            end,
-            help = "%s %s FORMAT\10    Sets the global format\10    use \\37 for %% and \\32 for space"
-        },
-        ["getAlias"] = {
-            exec = function(table)
-                print(KacklaDb.alias)
-            end,
-            help = "%s %s\10    Gets the global alias"
-        },
-        ["getFormat"] = {
-            exec = function(table)
-                print(KacklaDb.format)
-            end,
-            help = "%s %s\10    Gets the global alias"
-        },
-        ["setPlayerAlias"] = {
-            exec = function(table, alias)
-                KacklaPerCharacterDb.alias = alias
-            end,
-            help = "%s %s ALIAS\10    Sets the player alias"
-        },
-        ["setPlayerFormat"] = {
-            exec = function(table, format)
-                KacklaPerCharacterDb.format = format
-            end,
-            help = "%s %s FORMAT\10    Sets the player format\10    use \\37 for %% and \\32 for space"
-        },
-        ["getPlayerAlias"] = {
-            exec = function(table)
-                print(KacklaPerCharacterDb.alias)
-            end,
-            help = "%s %s\10    Gets the player alias"
-        },
-        ["getPlayerFormat"] = {
-            exec = function(table)
-                print(KacklaPerCharacterDb.format)
-            end,
-            help = "%s %s\10    Gets the player alias"
-        },
-        ["help"] = {
-            exec = function(table, key)
-                if table[key] then
-                    print(string.format(table[key].help, "/kackla", key))
-                    return
-                end
-
-                print("/kackla [COMMAND] ([ARGS])")
-                print("\nCOMMANDS")
-                for k,v in pairs(table) do
-                    print(string.format(v.help, "    ", k))
-                end
-            end,
-            help = "%s %s [COMMAND]\n    Print help, if command is supplied shows help for that command"
-        }
-    }
-
+    local commands = self.slashCommands
     if commands[command] then
         return commands[command].exec(commands,arg)
     elseif command == "test" then
@@ -270,6 +205,75 @@ function kacklaFrameMixin:OnLoad()
       "AFK",
       "DND",
       "VOICE_TEXT"
+    }
+    self.slashCommands = {
+        ["setAlias"] = {
+            exec = function(table, alias)
+                KacklaDb.alias = alias
+            end,
+            help = "%s %s ALIAS\10    Sets the global alias"
+        },
+        ["setFormat"] = {
+            exec = function(table, format)
+                KacklaDb.format = format
+            end,
+            help = "%s %s FORMAT\10    Sets the global format\10    use \\37 for %% and \\32 for space"
+        },
+        ["getAlias"] = {
+            exec = function(table)
+                print(KacklaDb.alias)
+            end,
+            help = "%s %s\10    Gets the global alias"
+        },
+        ["getFormat"] = {
+            exec = function(table)
+                print(KacklaDb.format)
+            end,
+            help = "%s %s\10    Gets the global alias"
+        },
+        ["setPlayerAlias"] = {
+            exec = function(table, alias)
+                KacklaPerCharacterDb.alias = alias
+            end,
+            help = "%s %s ALIAS\10    Sets the player alias"
+        },
+        ["setPlayerFormat"] = {
+            exec = function(table, format)
+                KacklaPerCharacterDb.format = format
+            end,
+            help = "%s %s FORMAT\10    Sets the player format\10    use \\37 for %% and \\32 for space"
+        },
+        ["getPlayerAlias"] = {
+            exec = function(table)
+                print(KacklaPerCharacterDb.alias)
+            end,
+            help = "%s %s\10    Gets the player alias"
+        },
+        ["getPlayerFormat"] = {
+            exec = function(table)
+                print(KacklaPerCharacterDb.format)
+            end,
+            help = "%s %s\10    Gets the player alias"
+        },
+        ["help"] = {
+            make = function(table, key)
+                if table[key] then
+                    return string.format(table[key].help, "/kackla", key)
+                end
+
+                local s = "/kackla [COMMAND] ([ARGS])"
+                s = s .. "\nCOMMANDS"
+                for k,v in pairs(table) do
+                    s = s .. "\n" .. string.format(v.help, " ", k)
+                end
+
+                return s
+            end,
+            exec = function(table, key)
+                print(table.help.make(table,key))
+            end,
+            help = "%s %s [COMMAND]\n    Print help, if command is supplied shows help for that command"
+        }
     }
 
     self:registerSlashCommand("kackla", function(msg, editBox)
