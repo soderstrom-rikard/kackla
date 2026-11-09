@@ -108,34 +108,78 @@ end
 --
 --
 function kacklaFrameMixin:slashCommandHandler(msg, editBox)
-    local m = msg:gmatch("%w+")
+    local m = msg:gmatch("%S+")
     local command = m()
     local arg = m()
 
-    if command == "setAlias" then
-        KacklaDb.alias = arg
-        return
-    elseif command == "setFormat" then
-        KacklaDb.format = arg
-        return
-    elseif command == "getAlias" then
-        print(KacklaDb.alias)
-        return
-    elseif command == "getFormat" then
-        print(KacklaDb.format)
-        return
-    elseif command == "setPlayerAlias" then
-        KacklaPerCharacterDb.alias = arg
-        return
-    elseif command == "setPlayerFormat" then
-        KacklaPerCharacterDb.format = arg
-        return
-    elseif command == "getPlayerAlias" then
-        print(KacklaPerCharacterDb.alias)
-        return
-    elseif command == "getPlayerFormat" then
-        print(KacklaPerCharacterDb.format)
-        return
+    local commands = {
+        ["setAlias"] = {
+            exec = function(table, alias)
+                KacklaDb.alias = alias
+            end,
+            help = "%s %s ALIAS\10    Sets the global alias"
+        },
+        ["setFormat"] = {
+            exec = function(table, format)
+                KacklaDb.format = format
+            end,
+            help = "%s %s FORMAT\10    Sets the global format\10    use \\37 for %% and \\32 for space"
+        },
+        ["getAlias"] = {
+            exec = function(table)
+                print(KacklaDb.alias)
+            end,
+            help = "%s %s\10    Gets the global alias"
+        },
+        ["getFormat"] = {
+            exec = function(table)
+                print(KacklaDb.format)
+            end,
+            help = "%s %s\10    Gets the global alias"
+        },
+        ["setPlayerAlias"] = {
+            exec = function(table, alias)
+                KacklaPerCharacterDb.alias = alias
+            end,
+            help = "%s %s ALIAS\10    Sets the player alias"
+        },
+        ["setPlayerFormat"] = {
+            exec = function(table, format)
+                KacklaPerCharacterDb.format = format
+            end,
+            help = "%s %s FORMAT\10    Sets the player format\10    use \\37 for %% and \\32 for space"
+        },
+        ["getPlayerAlias"] = {
+            exec = function(table)
+                print(KacklaPerCharacterDb.alias)
+            end,
+            help = "%s %s\10    Gets the player alias"
+        },
+        ["getPlayerFormat"] = {
+            exec = function(table)
+                print(KacklaPerCharacterDb.format)
+            end,
+            help = "%s %s\10    Gets the player alias"
+        },
+        ["help"] = {
+            exec = function(table, key)
+                if table[key] then
+                    print(string.format(table[key].help, "/kackla", key))
+                    return
+                end
+
+                print("/kackla [COMMAND] ([ARGS])")
+                print("\nCOMMANDS")
+                for k,v in pairs(table) do
+                    print(string.format(v.help, "    ", k))
+                end
+            end,
+            help = "%s %s [COMMAND]\n    Print help, if command is supplied shows help for that command"
+        }
+    }
+
+    if commands[command] then
+        return commands[command].exec(commands,arg)
     elseif command == "test" then
         markup = self:MakeAtlasMarkup("MainPet-LevelBubble", 1.0, 1.0)
 
@@ -147,10 +191,12 @@ function kacklaFrameMixin:slashCommandHandler(msg, editBox)
         return
     elseif command then
         print("unknown command '" .. command .. "' received")
+        commands.help.exec(commands)
+        return
+    else
+        commands.help.exec(commands)
         return
     end
-
-    print("slash command reached")
 end
 
 -- ADDON is fully loaded, so we now have access to things like
