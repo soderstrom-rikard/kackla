@@ -7,9 +7,9 @@ Kackla is a minimal wow-addon that aims at helping with social interactions.
 | Version       | Description                                       |
 | :---------    | :--------                                         |
 | 0.0.1         | Adds customizable prompts (similiar to Identity2) |
-| 0.0.2         | Added `kackla help` to be able to list commands and
- usage in game. Also added .editorconfig                            |
+| 0.0.2         | Added `kackla help` to be able to list commands and usage in game. Also added .editorconfig |
 | 0.0.3         | Added kackla.test.lua for simplified testing      |
+| 0.0.4         | Simplified setting the format using slash command |
 
 ## Installation
 
