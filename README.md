@@ -23,21 +23,19 @@ in your Interface/Addons World of Warcraft directory.
 COMMANDS
   getFormat
     Gets the global alias
+  getPlayerAlias
+    Gets the player alias
   getPlayerFormat
     Gets the player alias
+  help [COMMAND]
+    Print help, if command is supplied shows help for that command
+  setAlias ALIAS
+    Sets the global alias
   setFormat FORMAT
     Sets the global format
     use \37 for % and \32 for space
-  getPlayerAlias
-    Gets the player alias
-  getAlias
-    Gets the global alias
   setPlayerAlias ALIAS
     Sets the player alias
-  setAlias ALIAS
-    Sets the global alias
-  help [COMMAND]
-    Print help, if command is supplied shows help for that command
   setPlayerFormat FORMAT
     Sets the player format
     use \37 for % and \32 for space

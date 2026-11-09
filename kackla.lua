@@ -208,69 +208,80 @@ function kacklaFrameMixin:OnLoad()
     }
     self.slashCommands = {
         ["setAlias"] = {
-            exec = function(table, alias)
+            exec = function(lookup, alias)
                 KacklaDb.alias = alias
             end,
             help = "%s %s ALIAS\10    Sets the global alias"
         },
         ["setFormat"] = {
-            exec = function(table, format)
+            exec = function(lookup, format)
                 KacklaDb.format = format
             end,
             help = "%s %s FORMAT\10    Sets the global format\10    use \\37 for %% and \\32 for space"
         },
         ["getAlias"] = {
-            exec = function(table)
+            exec = function(lookup)
                 print(KacklaDb.alias)
             end,
             help = "%s %s\10    Gets the global alias"
         },
         ["getFormat"] = {
-            exec = function(table)
+            exec = function(lookup)
                 print(KacklaDb.format)
             end,
             help = "%s %s\10    Gets the global alias"
         },
         ["setPlayerAlias"] = {
-            exec = function(table, alias)
+            exec = function(lookup, alias)
                 KacklaPerCharacterDb.alias = alias
             end,
             help = "%s %s ALIAS\10    Sets the player alias"
         },
         ["setPlayerFormat"] = {
-            exec = function(table, format)
+            exec = function(lookup, format)
                 KacklaPerCharacterDb.format = format
             end,
             help = "%s %s FORMAT\10    Sets the player format\10    use \\37 for %% and \\32 for space"
         },
         ["getPlayerAlias"] = {
-            exec = function(table)
+            exec = function(lookup)
                 print(KacklaPerCharacterDb.alias)
             end,
             help = "%s %s\10    Gets the player alias"
         },
         ["getPlayerFormat"] = {
-            exec = function(table)
+            exec = function(lookup)
                 print(KacklaPerCharacterDb.format)
             end,
             help = "%s %s\10    Gets the player alias"
         },
         ["help"] = {
-            make = function(table, key)
-                if table[key] then
-                    return string.format(table[key].help, "/kackla", key)
+            make = function(lookup, key)
+                if lookup[key] then
+                    return string.format(lookup[key].help, "/kackla", key)
                 end
 
                 local s = "/kackla [COMMAND] ([ARGS])"
+
+                local table_keys = {}
+                local index = 0
+                for k,_ in pairs(lookup) do
+                    table_keys[index] = k
+                    index = index + 1
+                end
+                table.sort(table_keys, function(left, right)
+                    return left < right
+                end)
+
                 s = s .. "\nCOMMANDS"
-                for k,v in pairs(table) do
-                    s = s .. "\n" .. string.format(v.help, " ", k)
+                for k,v in ipairs(table_keys) do
+                    s = s .. "\n" .. string.format(lookup[v].help, " ", v)
                 end
 
                 return s
             end,
-            exec = function(table, key)
-                print(table.help.make(table,key))
+            exec = function(lookup, key)
+                print(lookup.help.make(lookup,key))
             end,
             help = "%s %s [COMMAND]\n    Print help, if command is supplied shows help for that command"
         }
