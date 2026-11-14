@@ -26,27 +26,27 @@ end
 -- returns nil when the command doesn't exist, hook isn't a function or the
 -- command is already hooked.
 function kacklaFrameMixin:registerHookCommand(command, hook, parent)
+    if not parent then
+        parent = _G
+    end
+
     if not parent[command] then
         print("Cannot register hook - command "
               .. command ..
-              " does not exist in global table")
+              " does not exist in parent table")
         return nil
     end
 
     if type(hook) ~= "function" then
         print("Cannot register hook - hook '"
-              .. hook ..
-              "'is not a function")
+              .. tostring(hook) ..
+              "' is not a function")
         return nil
     end
 
     if self.hooks[command] then
         print("Cannot register hook - already registered")
         return nil
-    end
-
-    if not parent then
-        parent = _G
     end
 
     self.hooks[command] = parent[command]
