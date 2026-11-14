@@ -281,6 +281,40 @@ function checkSendChatMessageHook()
     print("Verify SendChatMessage hook done")
 end
 
+function checkHelp()
+    print("Verify help start")
+    local maxLength = 50
+    local commands = sut.slashCommands
+    for name, command in pairs(commands) do
+        assert(type(command.help) == "table", name .. ": help should be a table of lines")
+        assert(#command.help >= 2, name .. ": help needs a usage and a description line")
+        for i = 2, #command.help do
+            local line = command.help[i]
+            assert(#line <= maxLength, name .. ": help line " .. i .. " is " .. #line
+                   .. " characters, max is " .. maxLength .. ": '" .. line .. "'")
+        end
+
+        -- single command help is the usage followed by indented descriptions
+        local text = commands.help.make(commands, name)
+        local lines = {}
+        for line in string.gmatch(text, "[^\n]+") do table.insert(lines, line) end
+        assert(lines[1] == string.format(command.help[1], "/kackla", name),
+               name .. ": unexpected usage line '" .. lines[1] .. "'")
+        for i = 2, #lines do
+            assert(lines[i] == "    " .. command.help[i],
+                   name .. ": unexpected description line '" .. lines[i] .. "'")
+        end
+    end
+
+    -- the full help keeps every description line within 4 + maxLength
+    for line in string.gmatch(commands.help.make(commands), "[^\n]+") do
+        if line:sub(1, 4) == "    " then
+            assert(#line <= 4 + maxLength, "help line too long: '" .. line .. "'")
+        end
+    end
+    print("Verify help done")
+end
+
 function checkSlashCommands()
     print("Verify commands start")
 
@@ -315,6 +349,7 @@ function checkSlashCommands()
     print("Verify commands done")
 end
 
+checkHelp()
 checkSlashCommands()
 checkChannelCommands()
 checkIsChannelActive()

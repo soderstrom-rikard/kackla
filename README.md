@@ -50,19 +50,24 @@ COMMANDS
   getPlayerFormat
     Gets the player format
   help [COMMAND]
-    Print help, if command is supplied shows help for that command
+    Print help, if command is supplied shows help for
+    that command
   setAlias ALIAS
     Sets the global alias
   setChannels [CHANNELS]
-    Sets the comma-separated global channels where the alias is used, e.g. GUILD,SAY,MyChannel
-    Without CHANNELS, or with ALL, the alias is used in all channels
+    Sets the comma-separated global channels
+    where the alias is used, e.g. GUILD,SAY,MyChannel
+    Without CHANNELS, or with ALL, the alias is used
+    in all channels
   setFormat FORMAT
     Sets the global format
   setPlayerAlias ALIAS
     Sets the player alias
   setPlayerChannels [CHANNELS]
-    Sets the comma-separated player channels where the alias is used, overriding the global channels
-    ALL uses the alias in all channels, even when the global channels are restricted
+    Sets the comma-separated player channels where
+    the alias is used, overriding the global channels
+    ALL uses the alias in all channels, even when the
+    global channels are restricted
     Without CHANNELS the global channels are used
   setPlayerFormat FORMAT
     Sets the player format

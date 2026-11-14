@@ -315,78 +315,130 @@ function kacklaFrameMixin:OnLoad()
             exec = function(lookup, alias)
                 KacklaDb.alias = alias
             end,
-            help = "%s %s ALIAS\10    Sets the global alias"
+            help = {
+                "%s %s ALIAS",
+                "Sets the global alias",
+            }
         },
         ["setFormat"] = {
             exec = function(lookup, format)
                 KacklaDb.format = format
             end,
-            help = "%s %s FORMAT\10    Sets the global format"
+            help = {
+                "%s %s FORMAT",
+                "Sets the global format",
+            }
         },
         ["setChannels"] = {
             exec = function(lookup, csv)
                 self:SetChannels(csv, function(channels) KacklaDb.channels = channels end)
             end,
-            help = "%s %s [CHANNELS]\10    Sets the comma-separated global channels where the alias is used, e.g. GUILD,SAY,MyChannel\10    Without CHANNELS, or with ALL, the alias is used in all channels"
+            help = {
+                "%s %s [CHANNELS]",
+                "Sets the comma-separated global channels",
+                "where the alias is used, e.g. GUILD,SAY,MyChannel",
+                "Without CHANNELS, or with ALL, the alias is used",
+                "in all channels",
+            }
         },
         ["getAlias"] = {
             exec = function(lookup)
                 print(KacklaDb.alias)
             end,
-            help = "%s %s\10    Gets the global alias"
+            help = {
+                "%s %s",
+                "Gets the global alias",
+            }
         },
         ["getFormat"] = {
             exec = function(lookup)
                 print(KacklaDb.format)
             end,
-            help = "%s %s\10    Gets the global format"
+            help = {
+                "%s %s",
+                "Gets the global format",
+            }
         },
         ["getChannels"] = {
             exec = function(lookup)
                 print(ChannelsToCsv(KacklaDb.channels) or "ALL")
             end,
-            help = "%s %s\10    Gets the global channels"
+            help = {
+                "%s %s",
+                "Gets the global channels",
+            }
         },
         ["setPlayerAlias"] = {
             exec = function(lookup, alias)
                 KacklaPerCharacterDb.alias = alias
             end,
-            help = "%s %s ALIAS\10    Sets the player alias"
+            help = {
+                "%s %s ALIAS",
+                "Sets the player alias",
+            }
         },
         ["setPlayerFormat"] = {
             exec = function(lookup, format)
                 KacklaPerCharacterDb.format = format
             end,
-            help = "%s %s FORMAT\10    Sets the player format"
+            help = {
+                "%s %s FORMAT",
+                "Sets the player format",
+            }
         },
         ["setPlayerChannels"] = {
             exec = function(lookup, csv)
                 self:SetChannels(csv, function(channels) KacklaPerCharacterDb.channels = channels end)
             end,
-            help = "%s %s [CHANNELS]\10    Sets the comma-separated player channels where the alias is used, overriding the global channels\10    ALL uses the alias in all channels, even when the global channels are restricted\10    Without CHANNELS the global channels are used"
+            help = {
+                "%s %s [CHANNELS]",
+                "Sets the comma-separated player channels where",
+                "the alias is used, overriding the global channels",
+                "ALL uses the alias in all channels, even when the",
+                "global channels are restricted",
+                "Without CHANNELS the global channels are used",
+            }
         },
         ["getPlayerAlias"] = {
             exec = function(lookup)
                 print(KacklaPerCharacterDb.alias)
             end,
-            help = "%s %s\10    Gets the player alias"
+            help = {
+                "%s %s",
+                "Gets the player alias",
+            }
         },
         ["getPlayerFormat"] = {
             exec = function(lookup)
                 print(KacklaPerCharacterDb.format)
             end,
-            help = "%s %s\10    Gets the player format"
+            help = {
+                "%s %s",
+                "Gets the player format",
+            }
         },
         ["getPlayerChannels"] = {
             exec = function(lookup)
                 print(ChannelsToCsv(KacklaPerCharacterDb.channels) or "global")
             end,
-            help = "%s %s\10    Gets the player channels"
+            help = {
+                "%s %s",
+                "Gets the player channels",
+            }
         },
         ["help"] = {
+            -- Each help is a table of lines: the first is the usage, formatted
+            -- with the prefix and command name, the rest describe the command
+            -- and are indented here. Keep description lines at most 50
+            -- characters, kackla.test.lua checks this.
+            format = function(help, prefix, key)
+                return string.format(help[1], prefix, key)
+                       .. "\n    " .. table.concat(help, "\n    ", 2)
+            end,
             make = function(lookup, key)
+                local format = lookup.help.format
                 if lookup[key] then
-                    return string.format(lookup[key].help, "/kackla", key)
+                    return format(lookup[key].help, "/kackla", key)
                 end
 
                 local s = "/kackla [COMMAND] ([ARGS])"
@@ -403,7 +455,7 @@ function kacklaFrameMixin:OnLoad()
 
                 s = s .. "\nCOMMANDS"
                 for k,v in ipairs(table_keys) do
-                    s = s .. "\n" .. string.format(lookup[v].help, " ", v)
+                    s = s .. "\n" .. format(lookup[v].help, " ", v)
                 end
 
                 return s
@@ -411,7 +463,11 @@ function kacklaFrameMixin:OnLoad()
             exec = function(lookup, key)
                 print(lookup.help.make(lookup,key))
             end,
-            help = "%s %s [COMMAND]\n    Print help, if command is supplied shows help for that command"
+            help = {
+                "%s %s [COMMAND]",
+                "Print help, if command is supplied shows help for",
+                "that command",
+            }
         }
     }
 
