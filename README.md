@@ -10,6 +10,7 @@ Kackla is a minimal wow-addon that aims at helping with social interactions.
 | 0.0.2         | Added `kackla help` to be able to list commands and usage in game. Also added .editorconfig |
 | 0.0.3         | Added kackla.test.lua for simplified testing      |
 | 0.0.4         | Simplified setting the format using slash command |
+| 0.0.5         | Added `setChannels`, `getChannels`, `setPlayerChannels` and `getPlayerChannels` to limit the alias to chosen chat types (SAY, GUILD, …) and custom channels. `setPlayerChannels ALL` lets a character use the alias in all channels even when the global channels are restricted |
 
 ## Installation
 
@@ -38,20 +39,31 @@ If you have a character where you don't want an alias, log into it and run
 COMMANDS
   getAlias
     Gets the global alias
+  getChannels
+    Gets the global channels
   getFormat
-    Gets the global alias
+    Gets the global format
   getPlayerAlias
     Gets the player alias
+  getPlayerChannels
+    Gets the player channels
   getPlayerFormat
-    Gets the player alias
+    Gets the player format
   help [COMMAND]
     Print help, if command is supplied shows help for that command
   setAlias ALIAS
     Sets the global alias
+  setChannels [CHANNELS]
+    Sets the comma-separated global channels where the alias is used, e.g. GUILD,SAY,MyChannel
+    Without CHANNELS, or with ALL, the alias is used in all channels
   setFormat FORMAT
     Sets the global format
   setPlayerAlias ALIAS
     Sets the player alias
+  setPlayerChannels [CHANNELS]
+    Sets the comma-separated player channels where the alias is used, overriding the global channels
+    ALL uses the alias in all channels, even when the global channels are restricted
+    Without CHANNELS the global channels are used
   setPlayerFormat FORMAT
     Sets the player format
 ```

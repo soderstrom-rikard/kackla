@@ -67,10 +67,111 @@ function kacklaFrameMixin:GetAliasAndFormat()
     return alias, format
 end
 
+-- How channels are stored in KacklaDb.channels and KacklaPerCharacterDb.channels:
+--   nil                       not set. Globally the alias is used in all
+--                             channels, per character the global channels
+--                             are used
+--   {}                        the alias is used in all channels. Lets a
+--                             character use all channels even when the
+--                             global channels are restricted
+--   {GUILD = true, ...}       the alias is only used in these channels
+-- The empty set meaning "all" is only how it is stored, users type ALL.
+
+-- Parses a comma separated list of channels into a set, e.g.
+-- "guild, Say,MyChannel" -> {GUILD = true, SAY = true, MYCHANNEL = true}
+-- Names are upper cased since both chat types and channel names are
+-- case-insensitive. An empty list returns nil (not set) and the keyword ALL
+-- returns {} (all channels). ALL wins over any other listed channel, so a
+-- custom channel actually named "All" can't be selected.
+local function ParseChannels(csv)
+    local channels = nil
+    for item in string.gmatch(csv or "", "[^,]+") do
+        local name = string.upper(item:match("^%s*(.-)%s*$"))
+        if name == "ALL" then
+            return {}
+        end
+        if name ~= "" then
+            channels = channels or {}
+            channels[name] = true
+        end
+    end
+    return channels
+end
+
+-- Inverse of ParseChannels, sorted so the output is stable. Returns nil when
+-- not set, so the caller can say what that means in its context.
+local function ChannelsToCsv(channels)
+    if channels == nil then
+        return nil
+    end
+    if next(channels) == nil then
+        return "ALL"
+    end
+    local names = {}
+    for name in pairs(channels) do
+        table.insert(names, name)
+    end
+    table.sort(names)
+    return table.concat(names, ",")
+end
+
+-- Stores the parsed channels via the setter and warns about names that are
+-- neither a chat type nor a channel the player is currently in. They are
+-- still stored, since the player may join the channel later.
+function kacklaFrameMixin:SetChannels(csv, store)
+    local channels = ParseChannels(csv)
+    for name in pairs(channels or {}) do
+        if not self.chatTypeLookup[name] and GetChannelName(name) == 0 then
+            print("kackla: '" .. name .. "' is not a chat type or a joined channel")
+        end
+    end
+    store(channels)
+end
+
+-- The per character channels override the global ones
+function kacklaFrameMixin:GetChannels()
+    if KacklaPerCharacterDb.channels ~= nil then
+        return KacklaPerCharacterDb.channels
+    end
+    return KacklaDb.channels
+end
+
+-- nil or {} channels means the alias is used in all channels, see above.
+-- Custom channels are sent as chatType "CHANNEL" with target being the
+-- channel number, so they are matched on the channel name. Zone channels such
+-- as "General - Stormwind City" also match on the part before " - ".
+-- Listing "CHANNEL" itself makes the alias used in all custom channels.
+function kacklaFrameMixin:IsChannelActive(chatType, target)
+    local channels = self:GetChannels()
+    if channels == nil or next(channels) == nil then
+        return true
+    end
+
+    chatType = string.upper(chatType or "SAY")
+    if channels[chatType] then
+        return true
+    end
+
+    if chatType == "CHANNEL" and target then
+        local _, name = GetChannelName(target)
+        if name then
+            name = string.upper(name)
+            local baseName = name:match("^(.-) %- ") or name
+            return channels[name] == true or channels[baseName] == true
+        end
+    end
+
+    return false
+end
+
 function kacklaFrameMixin:SendChatMessage(msg, channel, language, target)
     if not self.hooks["SendChatMessage"] then
         error("We shouldn't be able to reach our own hook without having it registered")
         return
+    end
+
+    if not self:IsChannelActive(channel, target) then
+        return self.hooks["SendChatMessage"](msg, channel, language, target)
     end
 
     -- self.hooks["SendChatMessage"]("<Sodrik> " .. msg, channel, language, target)
@@ -144,21 +245,22 @@ function kacklaFrameMixin:ADDON_LOADED(addonName)
     print("kackla loading..")
     local playerFirstName, playerLastName = UnitName("player")
     local playerFullName = playerFirstName .. " " .. playerLastName
-    KacklaDb = KacklaDb or {alias = playerFullName, format = "[%s] %s"}
+    -- channels = nil means all channels, so existing saved variables
+    -- without channels keep working as before
+    KacklaDb = KacklaDb or {alias = playerFullName, format = "[%s] %s", channels = nil}
     KacklaPerCharacterDb = KacklaPerCharacterDb or {
         alias = nil,
-        format = nil
+        format = nil,
+        channels = nil
     }
 
-    if KacklaDb.alias and KacklaDb.format then
-        print( "kackla alias: " .. KacklaDb.alias)
-        print( "kackla format: " .. KacklaDb.format)
-    end
+    print( "kackla alias: " .. tostring(KacklaDb.alias))
+    print( "kackla format: " .. tostring(KacklaDb.format))
+    print( "kackla channels: " .. (ChannelsToCsv(KacklaDb.channels) or "ALL"))
 
-    if KacklaPerCharacterDb.alias and KacklaPerCharacterDb.format then
-        print( "kackla Character specific alias: " .. KacklaPerCharacterDb.alias)
-        print( "kackla Character specific format: " .. KacklaPerCharacterDb.format)
-    end
+    print( "kackla player alias: " .. tostring(KacklaPerCharacterDb.alias))
+    print( "kackla player format: " .. tostring(KacklaPerCharacterDb.format))
+    print( "kackla player channels: " .. (ChannelsToCsv(KacklaPerCharacterDb.channels) or "global"))
 
     print("kackla loaded")
 end
@@ -204,6 +306,10 @@ function kacklaFrameMixin:OnLoad()
       "DND",
       "VOICE_TEXT"
     }
+    self.chatTypeLookup = {}
+    for _, chatType in ipairs(self.chatTypes) do
+        self.chatTypeLookup[chatType] = true
+    end
     self.slashCommands = {
         ["setAlias"] = {
             exec = function(lookup, alias)
@@ -217,6 +323,12 @@ function kacklaFrameMixin:OnLoad()
             end,
             help = "%s %s FORMAT\10    Sets the global format"
         },
+        ["setChannels"] = {
+            exec = function(lookup, csv)
+                self:SetChannels(csv, function(channels) KacklaDb.channels = channels end)
+            end,
+            help = "%s %s [CHANNELS]\10    Sets the comma-separated global channels where the alias is used, e.g. GUILD,SAY,MyChannel\10    Without CHANNELS, or with ALL, the alias is used in all channels"
+        },
         ["getAlias"] = {
             exec = function(lookup)
                 print(KacklaDb.alias)
@@ -227,7 +339,13 @@ function kacklaFrameMixin:OnLoad()
             exec = function(lookup)
                 print(KacklaDb.format)
             end,
-            help = "%s %s\10    Gets the global alias"
+            help = "%s %s\10    Gets the global format"
+        },
+        ["getChannels"] = {
+            exec = function(lookup)
+                print(ChannelsToCsv(KacklaDb.channels) or "ALL")
+            end,
+            help = "%s %s\10    Gets the global channels"
         },
         ["setPlayerAlias"] = {
             exec = function(lookup, alias)
@@ -241,6 +359,12 @@ function kacklaFrameMixin:OnLoad()
             end,
             help = "%s %s FORMAT\10    Sets the player format"
         },
+        ["setPlayerChannels"] = {
+            exec = function(lookup, csv)
+                self:SetChannels(csv, function(channels) KacklaPerCharacterDb.channels = channels end)
+            end,
+            help = "%s %s [CHANNELS]\10    Sets the comma-separated player channels where the alias is used, overriding the global channels\10    ALL uses the alias in all channels, even when the global channels are restricted\10    Without CHANNELS the global channels are used"
+        },
         ["getPlayerAlias"] = {
             exec = function(lookup)
                 print(KacklaPerCharacterDb.alias)
@@ -251,7 +375,13 @@ function kacklaFrameMixin:OnLoad()
             exec = function(lookup)
                 print(KacklaPerCharacterDb.format)
             end,
-            help = "%s %s\10    Gets the player alias"
+            help = "%s %s\10    Gets the player format"
+        },
+        ["getPlayerChannels"] = {
+            exec = function(lookup)
+                print(ChannelsToCsv(KacklaPerCharacterDb.channels) or "global")
+            end,
+            help = "%s %s\10    Gets the player channels"
         },
         ["help"] = {
             make = function(lookup, key)
