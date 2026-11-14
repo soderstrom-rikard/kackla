@@ -2,11 +2,33 @@
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:schemaLocation="http://www.blizzard.com/wow/ui/
     ..\..\FrameXML\UI.xsd">
+  <Script File="emoticons.lua"/>
   <Script File="kackla.lua"/>
+  <Script File="emoticonpicker.lua"/>
   <Frame name="kacklaFrame" mixin="kacklaFrameMixin">
    <Scripts>
      <OnEvent method="OnEvent"/>
      <OnLoad method="OnLoad"/>
    </Scripts>
   </Frame>
+  <!-- Emoticon picker, placed like Blizzard's ChatFrameMenuButton just below it -->
+  <DropdownButton name="KacklaEmoticonButton" frameStrata="MEDIUM" parent="ChatFrame1ButtonFrame" mixin="KacklaEmoticonButtonMixin">
+   <Size x="32" y="32"/>
+   <Anchors>
+     <Anchor point="TOP" relativeTo="ChatFrameMenuButton" relativePoint="BOTTOM"/>
+   </Anchors>
+   <!-- empty square button, like the chat menu button's frame, with ☺ as text -->
+   <NormalTexture file="Interface\Buttons\UI-SquareButton-Up"/>
+   <PushedTexture file="Interface\Buttons\UI-SquareButton-Down"/>
+   <HighlightTexture file="Interface\Buttons\UI-Common-MouseHilight" alphaMode="ADD"/>
+   <ButtonText parentKey="Label"/>
+   <!-- the chat font has ☺, the default button font shows it as a box -->
+   <NormalFont style="ChatFontNormal"/>
+   <PushedTextOffset x="1" y="-1"/>
+   <Scripts>
+     <OnLoad method="OnLoad"/>
+     <OnEnter method="OnEnter"/>
+     <OnLeave method="OnLeave"/>
+   </Scripts>
+  </DropdownButton>
 </Ui>

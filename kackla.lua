@@ -170,13 +170,15 @@ function kacklaFrameMixin:SendChatMessage(msg, channel, language, target)
         return
     end
 
+    -- the alias and emoticons are only used in the active channels
     if not self:IsChannelActive(channel, target) then
         return self.hooks["SendChatMessage"](msg, channel, language, target)
     end
 
     -- self.hooks["SendChatMessage"]("<Sodrik> " .. msg, channel, language, target)
     local alias, format = self:GetAliasAndFormat()
-    local aliasFormattedMessage = string.format(format, alias, msg)
+    -- replaced after formatting, so shortcuts in the alias and format work too
+    local aliasFormattedMessage = kacklaReplaceEmoticons(string.format(format, alias, msg))
 
     self.hooks["SendChatMessage"](aliasFormattedMessage, channel, language, target)
 end
@@ -204,6 +206,42 @@ function kacklaFrameMixin:MakeAtlasMarkup(name, sx, sy)
     )
 
     return markup
+end
+
+-- Prints each line as its own chat message. A single message taller than the
+-- chat window only shows its bottom part and can't be scrolled.
+local function PrintLines(text)
+    for line in string.gmatch(text, "[^\n]+") do
+        print(line)
+    end
+end
+
+-- All emoticon shortcuts sorted by name, a few per line
+function kacklaFrameMixin:EmoticonList()
+    local names = {}
+    for name in pairs(kacklaEmoticons) do
+        table.insert(names, name)
+    end
+    table.sort(names)
+
+    local lines, line = {}, ""
+    for _, name in ipairs(names) do
+        local entry = ":" .. name .. ": " .. kacklaEmoticons[name]
+        if line ~= "" and #line + #entry > 50 then
+            table.insert(lines, line)
+            line = ""
+        end
+        line = line == "" and ("  " .. entry) or (line .. "  " .. entry)
+    end
+    table.insert(lines, line)
+
+    -- raid icons with a local preview, |T textures only show locally
+    table.insert(lines, "kackla raid icons, built into the game:")
+    for index, tags in ipairs(kacklaRaidIcons) do
+        table.insert(lines, "  " .. table.concat(tags, " ") .. " " .. kacklaRaidIconTexture(index))
+    end
+
+    return "kackla emoticons:\n" .. table.concat(lines, "\n")
 end
 
 --
@@ -426,6 +464,17 @@ function kacklaFrameMixin:OnLoad()
                 "Gets the player channels",
             }
         },
+        ["emoticons"] = {
+            exec = function(lookup)
+                PrintLines(self:EmoticonList())
+            end,
+            help = {
+                "%s %s",
+                "Lists the :name: shortcuts that are replaced",
+                "with their symbol in channels where the alias",
+                "is used",
+            }
+        },
         ["help"] = {
             -- Each help is a table of lines: the first is the usage, formatted
             -- with the prefix and command name, the rest describe the command
@@ -461,7 +510,7 @@ function kacklaFrameMixin:OnLoad()
                 return s
             end,
             exec = function(lookup, key)
-                print(lookup.help.make(lookup,key))
+                PrintLines(lookup.help.make(lookup,key))
             end,
             help = {
                 "%s %s [COMMAND]",

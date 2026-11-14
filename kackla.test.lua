@@ -51,7 +51,9 @@ scriptDir = (function()
 end)()
 
 print("script dir: ", scriptDir)
+require("emoticons")
 require("kackla")
+require("emoticonpicker")
 
 sut = kacklaFrameMixin
 sut:OnLoad()
@@ -281,6 +283,166 @@ function checkSendChatMessageHook()
     print("Verify SendChatMessage hook done")
 end
 
+function checkEmoticons()
+    print("Verify emoticons start")
+
+    for name, symbol in pairs(kacklaEmoticons) do
+        assert(name:match("^[%l%d]+$"), "emoticon name '" .. name
+               .. "' should be lowercase letters and digits")
+        assert(type(symbol) == "string" and #symbol > 0, name .. ": missing symbol")
+    end
+
+    local function check(input, expected)
+        local got = kacklaReplaceEmoticons(input)
+        assert(got == expected, "'" .. input .. "': expected '" .. expected
+               .. "' got '" .. got .. "'")
+    end
+
+    check("hello :sun:", "hello ☼")
+    check(":SUN: :Heart:", "☼ ♥")
+    check(":sun::heart:", "☼♥")
+    check("x:sun:y", "x☼y")
+    check(":nosuch: :sun", ":nosuch: :sun")
+    check("meet at 12:30:45", "meet at 12:30:45")
+    check("", "")
+    -- links are left untouched, both their data and their text
+    local link = "|cff1eff00|Hitem:19019:up:0|h[:sun: sword]|h|r"
+    check(link .. " :heart:", link .. " ♥")
+    check(":heart: " .. link .. " :heart: " .. link, "♥ " .. link .. " ♥ " .. link)
+
+    -- the list shows every emoticon and keeps lines short
+    local list = sut:EmoticonList()
+    for name, symbol in pairs(kacklaEmoticons) do
+        assert(list:find(":" .. name .. ": " .. symbol, 1, true), "list is missing " .. name)
+    end
+    for index, tags in ipairs(kacklaRaidIcons) do
+        assert(list:find(tags[1] .. " " .. tags[2] .. " |TInterface\\TargetingFrame\\UI-RaidTargetingIcon_"
+                         .. index .. ":0|t", 1, true), "list is missing raid icon " .. tags[1])
+        assert(kacklaRaidIconTexture(index) == "|TInterface\\TargetingFrame\\UI-RaidTargetingIcon_"
+                         .. index .. ":0|t", "unexpected raid icon texture for " .. index)
+    end
+    for line in string.gmatch(list, "[^\n]+") do
+        -- textures take one character's space, not their escape's length
+        local shown = line:gsub("|T.-|t", "#")
+        assert(#shown <= 54, "emoticon list line too long: '" .. line .. "'")
+    end
+
+    -- the hook replaces emoticons only in channels where the alias is used
+    local originalHook = sut.hooks["SendChatMessage"]
+    local sent
+    sut.hooks["SendChatMessage"] = function(msg) sent = msg end
+    KacklaDb = {alias = "Bob :sun:", format = "[%s] %s", channels = {GUILD = true}}
+    KacklaPerCharacterDb = {}
+    C_ChatInfo.SendChatMessage("hi :heart:", "GUILD")
+    assert(sent == "[Bob ☼] hi ♥", "aliased message got '" .. sent .. "'")
+    C_ChatInfo.SendChatMessage("hi :heart:", "SAY")
+    assert(sent == "hi :heart:", "message in inactive channel got '" .. sent .. "'")
+    KacklaPerCharacterDb = {channels = {}}
+    C_ChatInfo.SendChatMessage("hi :heart:", "SAY")
+    assert(sent == "[Bob ☼] hi ♥", "message with player ALL got '" .. sent .. "'")
+    sut.hooks["SendChatMessage"] = originalHook
+
+    print("Verify emoticons done")
+end
+
+function checkEmoticonPicker()
+    print("Verify emoticon picker start")
+
+    -- chat edit box mocks
+    local inserted, opened
+    local editBox = {Insert = function(self, text) inserted = text end}
+    local activeEditBox
+    ChatFrameUtil = {
+        GetActiveWindow = function() return activeEditBox end,
+        OpenChat = function(text)
+            assert(text == nil, "OpenChat should get nil text, got '" .. tostring(text) .. "'")
+            opened = true
+            return editBox
+        end,
+    }
+
+    activeEditBox = editBox
+    kacklaInsertIntoChat(":heart:")
+    assert(inserted == ":heart:" and not opened, "should insert into the active edit box")
+    activeEditBox = nil
+    inserted = nil
+    kacklaInsertIntoChat("{rt8}")
+    assert(inserted == "{rt8}" and opened, "should open chat and then insert")
+
+    -- menu mocks, collecting the created entries
+    MenuConstants = {VerticalGridDirection = 2}
+    MenuResponse = {Open = 1, Refresh = 2, Close = 3, CloseAll = 4}
+    ChatFontNormal = {name = "ChatFontNormal"}
+    AnchorUtil = {CreateAnchor = function(...) return {...} end}
+    local tooltipLines
+    GameTooltip_SetTitle = function(tooltip, text) tooltipLines = {text} end
+    GameTooltip_AddNormalLine = function(tooltip, text) table.insert(tooltipLines, text) end
+    local entries, grid = {}, nil
+    local rootDescription = {
+        SetTag = function() end,
+        CreateButton = function(self, label, callback)
+            local entry = {label = label, callback = callback}
+            table.insert(entries, entry)
+            return {
+                SetTooltip = function(_, func) entry.tooltip = func end,
+                AddInitializer = function(_, func) entry.initializer = func end,
+            }
+        end,
+        SetGridMode = function(self, direction, columns) grid = {direction, columns} end,
+    }
+
+    NORMAL_FONT_COLOR = {GetRGB = function() return 1, 0.82, 0 end}
+    local button = {Label = {
+        SetTextColor = function(self, r, g, b) self.color = {r, g, b} end,
+        SetTextScale = function(self, scale) self.scale = scale end,
+    }}
+    for k, v in pairs(KacklaEmoticonButtonMixin) do button[k] = v end
+    button.SetText = function(self, text) self.text = text end
+    button.SetMenuAnchor = function(self, anchor) self.anchor = anchor end
+    button.SetupMenu = function(self, generator) generator(self, rootDescription) end
+    button:OnLoad()
+
+    assert(button.text == "☺", "button text should be ☺, got '" .. tostring(button.text) .. "'")
+    assert(button.Label.color[1] == 1 and button.Label.color[2] == 0.82 and button.Label.color[3] == 0,
+           "button text should be gold")
+    assert(button.Label.scale == 1.5, "button text should be scaled up")
+    assert(button.anchor[1] == "BOTTOMLEFT" and button.anchor[3] == "TOPRIGHT", "menu should open upwards")
+
+    local count = #kacklaRaidIcons + #kacklaEmoticonList
+    assert(#entries == count, "expected " .. count .. " entries, got " .. #entries)
+    assert(grid[1] == 2 and grid[2] == math.ceil(count / 8), "unexpected grid " .. tostring(grid[2]))
+
+    -- every entry uses the chat font and keeps the menu open when picked
+    for i, entry in ipairs(entries) do
+        local fontObject
+        entry.initializer({fontString = {SetFontObject = function(_, font) fontObject = font end}})
+        assert(fontObject == ChatFontNormal, "entry " .. i .. " should use ChatFontNormal")
+        assert(entry.callback() == MenuResponse.Open, "entry " .. i .. " should keep the menu open")
+    end
+
+    -- raid icons first, inserting their {rtN} tag
+    for index, tags in ipairs(kacklaRaidIcons) do
+        local entry = entries[index]
+        assert(entry.label == kacklaRaidIconTexture(index), "raid icon " .. index .. " label")
+        entry.callback()
+        assert(inserted == tags[1], "raid icon " .. index .. " inserted '" .. tostring(inserted) .. "'")
+        entry.tooltip({})
+        assert(tooltipLines[1] == table.concat(tags, " "), "raid icon " .. index .. " tooltip")
+    end
+
+    -- then the emoticons in list order, inserting their :name: shortcut
+    for i, emoticon in ipairs(kacklaEmoticonList) do
+        local entry = entries[#kacklaRaidIcons + i]
+        assert(entry.label == emoticon[2], emoticon[1] .. " label '" .. entry.label .. "'")
+        entry.callback()
+        assert(inserted == ":" .. emoticon[1] .. ":", emoticon[1] .. " inserted '" .. tostring(inserted) .. "'")
+        entry.tooltip({})
+        assert(tooltipLines[1] == ":" .. emoticon[1] .. ":", emoticon[1] .. " tooltip")
+    end
+
+    print("Verify emoticon picker done")
+end
+
 function checkHelp()
     print("Verify help start")
     local maxLength = 50
@@ -354,3 +516,5 @@ checkSlashCommands()
 checkChannelCommands()
 checkIsChannelActive()
 checkSendChatMessageHook()
+checkEmoticons()
+checkEmoticonPicker()
