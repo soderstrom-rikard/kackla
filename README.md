@@ -52,6 +52,7 @@ If you have a character where you don't want an alias, log into it and run
 
 ```txt
 /kackla [COMMAND] ([ARGS])
+  Without COMMAND opens the settings window
 COMMANDS
   emoticons
     Lists the :name: shortcuts that are replaced

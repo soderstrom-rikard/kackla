@@ -21,7 +21,15 @@ local PICKER_ROWS = 8
 -- Mixin for KacklaEmoticonButton in kackla.xml, a DropdownButton
 KacklaEmoticonButtonMixin = {}
 
--- Sets the ☺ label and the menu, which is created each time it opens
+-- The DropdownButton intrinsic only listens to the left mouse button. This
+-- adds the right button, which opens the settings instead of the menu.
+function KacklaEmoticonButtonMixin:ListenToRightButton()
+    self:RegisterForMouse("LeftButtonDown", "LeftButtonUp", "RightButtonDown", "RightButtonUp")
+    self:RegisterForClicks("RightButtonUp")
+end
+
+-- Sets the ☺ label, the menu, which is created each time it opens, and
+-- right-click opening the settings
 function KacklaEmoticonButtonMixin:OnLoad()
     self:SetText(kacklaEmoticons.smile)
     -- gold like the chat menu button's bubble, and larger to fill the button
@@ -34,13 +42,36 @@ function KacklaEmoticonButtonMixin:OnLoad()
     self:SetupMenu(function(dropdown, rootDescription)
         self:CreateEntries(rootDescription)
     end)
+
+    -- the intrinsic toggles the menu on any mouse down, keep that to the left
+    -- button. Its script is bound when the button loads, so replacing
+    -- OnMouseDown_Intrinsic has no effect, but the SetMenuOpen it calls is
+    -- looked up on the button each time.
+    local setMenuOpen = self.SetMenuOpen
+    self.SetMenuOpen = function(button, open)
+        if not IsMouseButtonDown("RightButton") then
+            setMenuOpen(button, open)
+        end
+    end
+    self:ListenToRightButton()
+end
+
+-- Right-click toggles the settings window, left clicks are handled by the
+-- intrinsic on mouse down
+function KacklaEmoticonButtonMixin:OnClick(mouseButton)
+    if mouseButton == "RightButton" then
+        kacklaToggleSettings()
+    end
 end
 
 -- Shows what the button does
 function KacklaEmoticonButtonMixin:OnEnter()
+    -- again, in case the intrinsic OnLoad ran after ours and reset it
+    self:ListenToRightButton()
     GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
     GameTooltip_SetTitle(GameTooltip, "kackla emoticons")
     GameTooltip_AddNormalLine(GameTooltip, "Click to insert an emoticon or raid icon into your chat message")
+    GameTooltip_AddNormalLine(GameTooltip, "Right-click to open the settings")
     GameTooltip:Show()
 end
 

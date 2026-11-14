@@ -113,6 +113,8 @@ local function ChannelsToCsv(channels)
     table.sort(names)
     return table.concat(names, ",")
 end
+-- Used by the settings window
+kacklaChannelsToCsv = ChannelsToCsv
 
 -- Stores the parsed channels via the setter and warns about names that are
 -- neither a chat type nor a channel the player is currently in. They are
@@ -248,7 +250,9 @@ function kacklaFrameMixin:EmoticonList()
 end
 
 -- Handles "/kackla COMMAND ARGS" by running the command from
--- self.slashCommands with ARGS. Unknown or missing commands print the help.
+-- self.slashCommands with ARGS, refreshing the settings window when it is
+-- open. A bare /kackla toggles the settings window, unknown commands print
+-- the help.
 -- "/kackla test [CHATTYPE]" is a development command that prints an atlas
 -- texture locally, or sends it to CHATTYPE.
 function kacklaFrameMixin:slashCommandHandler(msg, editBox)
@@ -256,7 +260,11 @@ function kacklaFrameMixin:slashCommandHandler(msg, editBox)
 
     local commands = self.slashCommands
     if commands[command] then
-        return commands[command].exec(commands,arg)
+        commands[command].exec(commands,arg)
+        if KacklaSettingsFrame and KacklaSettingsFrame:IsShown() then
+            KacklaSettingsFrame:Refresh()
+        end
+        return
     elseif command == "test" then
         markup = self:MakeAtlasMarkup("MainPet-LevelBubble", 1.0, 1.0)
 
@@ -271,7 +279,7 @@ function kacklaFrameMixin:slashCommandHandler(msg, editBox)
         commands.help.exec(commands)
         return
     else
-        commands.help.exec(commands)
+        kacklaToggleSettings()
         return
     end
 end
@@ -501,6 +509,7 @@ function kacklaFrameMixin:OnLoad()
                 end
 
                 local s = "/kackla [COMMAND] ([ARGS])"
+                          .. "\n  Without COMMAND opens the settings window"
 
                 local table_keys = {}
                 local index = 0

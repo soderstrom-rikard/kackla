@@ -5,6 +5,7 @@
   <Script File="emoticons.lua"/>
   <Script File="kackla.lua"/>
   <Script File="emoticonpicker.lua"/>
+  <Script File="settings.lua"/>
   <Frame name="kacklaFrame" mixin="kacklaFrameMixin">
    <Scripts>
      <OnEvent method="OnEvent"/>
@@ -29,6 +30,154 @@
      <OnLoad method="OnLoad"/>
      <OnEnter method="OnEnter"/>
      <OnLeave method="OnLeave"/>
+     <OnClick method="OnClick"/>
    </Scripts>
   </DropdownButton>
+  <!-- Edit box of the settings window, see KacklaSettingsEditBoxMixin -->
+  <EditBox name="KacklaSettingsEditBoxTemplate" inherits="InputBoxTemplate" mixin="KacklaSettingsEditBoxMixin" autoFocus="false" virtual="true">
+   <Size x="160" y="20"/>
+   <Scripts>
+     <OnEnterPressed method="OnEnterPressed"/>
+     <OnEscapePressed method="OnEscapePressed"/>
+     <OnEditFocusLost method="OnEditFocusLost"/>
+   </Scripts>
+  </EditBox>
+  <!-- Settings window, opened with a bare /kackla or by right-clicking the
+       emoticon button. Rows are settings, columns global and this character. -->
+  <Frame name="KacklaSettingsFrame" parent="UIParent" inherits="BasicFrameTemplateWithInset" mixin="KacklaSettingsMixin"
+         toplevel="true" movable="true" enableMouse="true" clampedToScreen="true" frameStrata="DIALOG" hidden="true">
+   <Size x="490" y="270"/>
+   <Anchors>
+     <Anchor point="CENTER"/>
+   </Anchors>
+   <Layers>
+     <Layer level="ARTWORK">
+        <FontString inherits="GameFontHighlight" text="Global">
+          <Anchors><Anchor point="TOPLEFT" x="100" y="-40"/></Anchors>
+        </FontString>
+        <FontString inherits="GameFontHighlight" text="This character">
+          <Anchors><Anchor point="TOPLEFT" x="306" y="-40"/></Anchors>
+        </FontString>
+        <FontString inherits="GameFontNormal" text="Alias" justifyH="LEFT">
+          <Anchors><Anchor point="TOPLEFT" x="16" y="-74"/></Anchors>
+        </FontString>
+        <FontString inherits="GameFontNormal" text="Format" justifyH="LEFT">
+          <Anchors><Anchor point="TOPLEFT" x="16" y="-104"/></Anchors>
+        </FontString>
+        <FontString inherits="GameFontNormal" text="Channels" justifyH="LEFT">
+          <Anchors><Anchor point="TOPLEFT" x="16" y="-134"/></Anchors>
+        </FontString>
+        <FontString inherits="GameFontHighlightSmall" justifyH="LEFT" text="Format: the first %s is the alias, the second %s the message">
+          <Anchors><Anchor point="TOPLEFT" x="16" y="-160"/></Anchors>
+        </FontString>
+        <FontString inherits="GameFontHighlightSmall" justifyH="LEFT" text="Channels: comma-separated, e.g. GUILD,SAY,MyChannel, or ALL">
+          <Anchors><Anchor point="TOPLEFT" x="16" y="-176"/></Anchors>
+        </FontString>
+        <FontString inherits="GameFontHighlightSmall" justifyH="LEFT" text="Tick a box to override the global setting for this character">
+          <Anchors><Anchor point="TOPLEFT" x="16" y="-192"/></Anchors>
+        </FontString>
+        <FontString inherits="GameFontNormal" text="Preview">
+          <Anchors><Anchor point="TOPLEFT" x="16" y="-216"/></Anchors>
+        </FontString>
+        <!-- the chat font, so emoticons show as in chat -->
+        <FontString parentKey="Preview" inherits="ChatFontNormal" justifyH="LEFT" wordwrap="false">
+          <Size x="360" y="0"/>
+          <Anchors><Anchor point="TOPLEFT" x="100" y="-216"/></Anchors>
+        </FontString>
+        <FontString inherits="GameFontNormal" text="Used in">
+          <Anchors><Anchor point="TOPLEFT" x="16" y="-238"/></Anchors>
+        </FontString>
+        <FontString parentKey="Channels" inherits="GameFontHighlight" justifyH="LEFT" wordwrap="false">
+          <Size x="360" y="0"/>
+          <Anchors><Anchor point="TOPLEFT" x="100" y="-238"/></Anchors>
+        </FontString>
+     </Layer>
+   </Layers>
+   <Frames>
+      <EditBox parentKey="GlobalAlias" inherits="KacklaSettingsEditBoxTemplate">
+        <KeyValues>
+          <KeyValue key="scope" value="global" type="string"/>
+          <KeyValue key="setting" value="alias" type="string"/>
+        </KeyValues>
+        <Anchors><Anchor point="TOPLEFT" x="100" y="-70"/></Anchors>
+      </EditBox>
+      <CheckButton parentKey="OverrideAlias" inherits="UICheckButtonTemplate" mixin="KacklaSettingsOverrideMixin">
+        <Size x="26" y="26"/>
+        <KeyValues>
+          <KeyValue key="setting" value="alias" type="string"/>
+        </KeyValues>
+        <Anchors><Anchor point="TOPLEFT" x="272" y="-67"/></Anchors>
+        <Scripts>
+          <OnClick method="OnClick"/>
+          <OnEnter method="OnEnter"/>
+          <OnLeave method="OnLeave"/>
+        </Scripts>
+      </CheckButton>
+      <EditBox parentKey="PlayerAlias" inherits="KacklaSettingsEditBoxTemplate">
+        <KeyValues>
+          <KeyValue key="scope" value="player" type="string"/>
+          <KeyValue key="setting" value="alias" type="string"/>
+        </KeyValues>
+        <Anchors><Anchor point="TOPLEFT" x="306" y="-70"/></Anchors>
+      </EditBox>
+      <EditBox parentKey="GlobalFormat" inherits="KacklaSettingsEditBoxTemplate">
+        <KeyValues>
+          <KeyValue key="scope" value="global" type="string"/>
+          <KeyValue key="setting" value="format" type="string"/>
+        </KeyValues>
+        <Anchors><Anchor point="TOPLEFT" x="100" y="-100"/></Anchors>
+      </EditBox>
+      <CheckButton parentKey="OverrideFormat" inherits="UICheckButtonTemplate" mixin="KacklaSettingsOverrideMixin">
+        <Size x="26" y="26"/>
+        <KeyValues>
+          <KeyValue key="setting" value="format" type="string"/>
+        </KeyValues>
+        <Anchors><Anchor point="TOPLEFT" x="272" y="-97"/></Anchors>
+        <Scripts>
+          <OnClick method="OnClick"/>
+          <OnEnter method="OnEnter"/>
+          <OnLeave method="OnLeave"/>
+        </Scripts>
+      </CheckButton>
+      <EditBox parentKey="PlayerFormat" inherits="KacklaSettingsEditBoxTemplate">
+        <KeyValues>
+          <KeyValue key="scope" value="player" type="string"/>
+          <KeyValue key="setting" value="format" type="string"/>
+        </KeyValues>
+        <Anchors><Anchor point="TOPLEFT" x="306" y="-100"/></Anchors>
+      </EditBox>
+      <EditBox parentKey="GlobalChannels" inherits="KacklaSettingsEditBoxTemplate">
+        <KeyValues>
+          <KeyValue key="scope" value="global" type="string"/>
+          <KeyValue key="setting" value="channels" type="string"/>
+        </KeyValues>
+        <Anchors><Anchor point="TOPLEFT" x="100" y="-130"/></Anchors>
+      </EditBox>
+      <CheckButton parentKey="OverrideChannels" inherits="UICheckButtonTemplate" mixin="KacklaSettingsOverrideMixin">
+        <Size x="26" y="26"/>
+        <KeyValues>
+          <KeyValue key="setting" value="channels" type="string"/>
+        </KeyValues>
+        <Anchors><Anchor point="TOPLEFT" x="272" y="-127"/></Anchors>
+        <Scripts>
+          <OnClick method="OnClick"/>
+          <OnEnter method="OnEnter"/>
+          <OnLeave method="OnLeave"/>
+        </Scripts>
+      </CheckButton>
+      <EditBox parentKey="PlayerChannels" inherits="KacklaSettingsEditBoxTemplate">
+        <KeyValues>
+          <KeyValue key="scope" value="player" type="string"/>
+          <KeyValue key="setting" value="channels" type="string"/>
+        </KeyValues>
+        <Anchors><Anchor point="TOPLEFT" x="306" y="-130"/></Anchors>
+      </EditBox>
+   </Frames>
+   <Scripts>
+     <OnLoad method="OnLoad"/>
+     <OnShow method="OnShow"/>
+     <OnDragStart method="OnDragStart"/>
+     <OnDragStop method="OnDragStop"/>
+   </Scripts>
+  </Frame>
 </Ui>
