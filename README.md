@@ -11,6 +11,7 @@ Kackla is a minimal wow-addon that aims at helping with social interactions.
 | 0.0.3         | Added kackla.test.lua for simplified testing      |
 | 0.0.4         | Simplified setting the format using slash command |
 | 0.0.5         | Added `setChannels`, `getChannels`, `setPlayerChannels` and `getPlayerChannels` to limit the alias to chosen chat types (SAY, GUILD, …) and custom channels. `setPlayerChannels ALL` lets a character use the alias in all channels even when the global channels are restricted |
+| 0.0.6         | Added `:name:` emoticon shortcuts (e.g. `:heart:` ♥, `:smile:` ☺) that are replaced with their symbol in channels where the alias is used, so other players see them without any addon. List them with `/kackla emoticons`, or pick them and raid icons from the new ☺ button below the chat menu button |
 
 ## Installation
 
@@ -37,6 +38,10 @@ If you have a character where you don't want an alias, log into it and run
 ```txt
 /kackla [COMMAND] ([ARGS])
 COMMANDS
+  emoticons
+    Lists the :name: shortcuts that are replaced
+    with their symbol in channels where the alias
+    is used
   getAlias
     Gets the global alias
   getChannels
