@@ -30,6 +30,7 @@ end
 SlashCmdList = {}
 registeredEvents = {}
 
+-- Mock of the WoW Mixin, RegisterEvent records the event in registeredEvents
 function Mixin(table)
     table.name = "kacklaTest"
     table.RegisterEvent = function(eventname)
@@ -38,6 +39,7 @@ function Mixin(table)
     return table
 end
 
+-- Mock of the WoW UnitName, returns the name and realm of the unit
 function UnitName(unit)
     local units = {
         player = {name = "tester", realm = "bob"}
@@ -97,6 +99,7 @@ function compareSets(left, right)
     return true
 end
 
+-- Returns the set ({KEY = true}) as a sorted "{A,B}" string, or "nil"
 function setToString(set)
     if set == nil then return "nil" end
     local names = {}
@@ -122,6 +125,8 @@ function capturePrint(func)
     return printed
 end
 
+-- Runs "command input" and asserts the channels stored in getDb() equal the
+-- expected set
 function checkChannels(command, getDb, input, expected)
     getDb().channels = "garbage"
     sut:slashCommandHandler(command .. " " .. input)
@@ -130,6 +135,8 @@ function checkChannels(command, getDb, input, expected)
            .. " got " .. setToString(getDb().channels))
 end
 
+-- Tests setChannels, getChannels, setPlayerChannels and getPlayerChannels,
+-- including ALL, chat types, custom and not joined channels
 function checkChannelCommands()
     print("Verify channel commands start")
     KacklaDb = {}
@@ -189,6 +196,8 @@ function checkChannelCommands()
     print("Verify channel commands done")
 end
 
+-- Tests which chat types and channels the alias is used in, with global
+-- and per character channels
 function checkIsChannelActive()
     print("Verify channel matching start")
 
@@ -241,6 +250,7 @@ function checkIsChannelActive()
     print("Verify channel matching done")
 end
 
+-- Tests that the hook adds the alias only in active channels
 function checkSendChatMessageHook()
     print("Verify SendChatMessage hook start")
     local originalHook = sut.hooks["SendChatMessage"]
@@ -283,6 +293,8 @@ function checkSendChatMessageHook()
     print("Verify SendChatMessage hook done")
 end
 
+-- Tests the :name: replacement (also through the hook), the emoticon table
+-- and the list printed by the emoticons command
 function checkEmoticons()
     print("Verify emoticons start")
 
@@ -345,6 +357,7 @@ function checkEmoticons()
     print("Verify emoticons done")
 end
 
+-- Tests the emoticon picker button and menu against mocked WoW UI APIs
 function checkEmoticonPicker()
     print("Verify emoticon picker start")
 
@@ -443,6 +456,8 @@ function checkEmoticonPicker()
     print("Verify emoticon picker done")
 end
 
+-- Tests the help format and that description lines are at most 50
+-- characters
 function checkHelp()
     print("Verify help start")
     local maxLength = 50
@@ -477,6 +492,7 @@ function checkHelp()
     print("Verify help done")
 end
 
+-- Tests the alias and format set commands, global and per character
 function checkSlashCommands()
     print("Verify commands start")
 

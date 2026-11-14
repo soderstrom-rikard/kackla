@@ -15,8 +15,23 @@ Kackla is a minimal wow-addon that aims at helping with social interactions.
 
 ## Installation
 
-Currently the only way to install this is to manually download the repo and place it in a folder called Kackla
-in your Interface/Addons World of Warcraft directory.
+From 0.0.6 onwards each GitHub release has a `kackla-VERSION.zip` and a `release.json`, so addon managers
+that install from GitHub releases can install and update kackla from the repository URL, for example
+[strongbox](https://github.com/ogri-la/strongbox), [WowUp](https://wowup.io),
+[CurseBreaker](https://github.com/AcidWeb/CurseBreaker) and [instawow](https://github.com/layday/instawow).
+
+You can also download the zip from the latest release and extract it into your Interface/AddOns
+World of Warcraft directory, it contains the `kackla` folder.
+
+## Making a release
+
+```
+make dist
+```
+
+This runs the tests and creates `dist/kackla-VERSION.zip` and `dist/release.json`, the version and the
+interface numbers are read from the .toc files. Create a GitHub release (not a draft or pre-release) and
+attach both files as release assets.
 
 Once installed you likely want to run
 

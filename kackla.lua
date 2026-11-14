@@ -1,8 +1,9 @@
 -- The full format is
 -- |Tpath:height[:width[:offsetX:offsetY:[textureWidth:textureHeight:leftTexel:rightTexel:topTexel:bottomTexel[:rVertexColor:gVertexColor:bVertexColor]]]]|t
 -- as described in  https://wowpedia.fandom.com/wiki/UI_escape_sequences
--- we will however limit ourselves to only "|Tpath:height:width|t"
--- This is the same as executing
+-- we will however limit ourselves to only "|Tpath:height:width|t".
+-- Returns that escape for t = {path = ..., height = ..., width = ...}.
+-- Currently unused.
 local function TextureString(t)
     return "|T"..t.path..":"..t.height..":"..t.width.."|t"
 end
@@ -10,7 +11,8 @@ end
 -- Create a local frame as a mix between the defined frame in kackla.xml and this local object
 kacklaFrameMixin = Mixin({})
 
---
+-- Registers /command (lower case) to call func(msg, editBox), where msg is
+-- the text after the command.
 -- https://wowpedia.fandom.com/wiki/Creating_a_slash_command
 function kacklaFrameMixin:registerSlashCommand(command, func)
     local name = "KACKLA_"..command:upper()
@@ -19,13 +21,10 @@ function kacklaFrameMixin:registerSlashCommand(command, func)
     _G["SLASH_"..name.."1"] = "/"..command:lower()
 end
 
--- Identity2 = LibStub("AceAddon-3.0").NewAddon("Identity2",
---                                              "AceConsole-3.0",
---                                              "AceHook-3.0",
---                                              "AceEvent-3.0")
--- Identity2:RawHook("SendChatMessage", true) -- method="SendChatMessage", handler=nil, hookSecure=true, object=nil
--- -> AceHook.hook(self, nil, "SendChatMessage", nil, false, false, true, true,  "Usage: RawHook([object], method, [handler], [hookSecure])")
--- ---> _G[method] = uid
+-- Replaces parent[command] (parent defaults to _G) with hook and keeps the
+-- original in self.hooks[command], so the hook can call it. Prints why and
+-- returns nil when the command doesn't exist, hook isn't a function or the
+-- command is already hooked.
 function kacklaFrameMixin:registerHookCommand(command, hook, parent)
     if not parent[command] then
         print("Cannot register hook - command "
@@ -54,8 +53,8 @@ function kacklaFrameMixin:registerHookCommand(command, hook, parent)
     parent[command] = hook
 end
 
---
---
+-- Returns the alias and format to use, the per character values override
+-- the global ones. Defaults to no alias and the format "%s%s".
 function kacklaFrameMixin:GetAliasAndFormat()
     local alias = KacklaPerCharacterDb.alias
             or KacklaDb.alias
@@ -164,6 +163,9 @@ function kacklaFrameMixin:IsChannelActive(chatType, target)
     return false
 end
 
+-- The SendChatMessage hook. In channels where the alias is used the message
+-- is formatted with the alias and its emoticon shortcuts are replaced, other
+-- messages are sent unchanged by the original SendChatMessage.
 function kacklaFrameMixin:SendChatMessage(msg, channel, language, target)
     if not self.hooks["SendChatMessage"] then
         error("We shouldn't be able to reach our own hook without having it registered")
@@ -183,8 +185,9 @@ function kacklaFrameMixin:SendChatMessage(msg, channel, language, target)
     self.hooks["SendChatMessage"](aliasFormattedMessage, channel, language, target)
 end
 
---
---
+-- Returns a 32x32 |T texture escape showing the atlas name, scaled by sx and
+-- sy. Prints a message and returns nil when the atlas doesn't exist. Only
+-- used by the test command, texture escapes are not sent to other players.
 function kacklaFrameMixin:MakeAtlasMarkup(name, sx, sy)
     local i = C_Texture.GetAtlasInfo(name)
     if not i then
@@ -244,8 +247,10 @@ function kacklaFrameMixin:EmoticonList()
     return "kackla emoticons:\n" .. table.concat(lines, "\n")
 end
 
---
---
+-- Handles "/kackla COMMAND ARGS" by running the command from
+-- self.slashCommands with ARGS. Unknown or missing commands print the help.
+-- "/kackla test [CHATTYPE]" is a development command that prints an atlas
+-- texture locally, or sends it to CHATTYPE.
 function kacklaFrameMixin:slashCommandHandler(msg, editBox)
     local _, _, command, arg = string.find(msg, "(%S+)%s*(.*)")
 
@@ -303,8 +308,7 @@ function kacklaFrameMixin:ADDON_LOADED(addonName)
     print("kackla loaded")
 end
 
---
--- Initializes player specific variables
+-- Meant for initializing player specific variables, there are none yet
 function kacklaFrameMixin:PLAYER_LOGIN()
     return
 end
@@ -315,12 +319,14 @@ function kacklaFrameMixin:PLAYER_LOGOUT()
     return
 end
 
+-- Calls the method named after the event, e.g. self:ADDON_LOADED(...)
 function kacklaFrameMixin:OnEvent(event, ...)
     self[event](self, ...)
 end
 
--- Initializes kackla addon module when frame loads
---
+-- Initializes kackla when its frame (kackla.xml) loads: sets up the chat
+-- types and slash commands, registers /kackla, hooks SendChatMessage and
+-- registers the events
 function kacklaFrameMixin:OnLoad()
     local playerFirstName, playerLastName = UnitName("player")
     local playerFullName = playerFirstName .. " " .. playerLastName
@@ -348,6 +354,8 @@ function kacklaFrameMixin:OnLoad()
     for _, chatType in ipairs(self.chatTypes) do
         self.chatTypeLookup[chatType] = true
     end
+    -- Each command has exec(lookup, arg), where lookup is this table and arg
+    -- the text after the command, and help (see help.format below)
     self.slashCommands = {
         ["setAlias"] = {
             exec = function(lookup, alias)
@@ -484,6 +492,8 @@ function kacklaFrameMixin:OnLoad()
                 return string.format(help[1], prefix, key)
                        .. "\n    " .. table.concat(help, "\n    ", 2)
             end,
+            -- Returns the help for command key, or for all commands sorted
+            -- by name when key isn't a command
             make = function(lookup, key)
                 local format = lookup.help.format
                 if lookup[key] then
@@ -531,6 +541,3 @@ function kacklaFrameMixin:OnLoad()
     self:RegisterEvent("PLAYER_LOGIN")
     self:RegisterEvent("PLAYER_LOGOUT")
 end
-
--- Example printing textures directly in WoW console
--- /kackla test

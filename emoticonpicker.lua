@@ -18,8 +18,10 @@ end
 -- get the first column to themselves
 local PICKER_ROWS = 8
 
+-- Mixin for KacklaEmoticonButton in kackla.xml, a DropdownButton
 KacklaEmoticonButtonMixin = {}
 
+-- Sets the ☺ label and the menu, which is created each time it opens
 function KacklaEmoticonButtonMixin:OnLoad()
     self:SetText(kacklaEmoticons.smile)
     -- gold like the chat menu button's bubble, and larger to fill the button
@@ -34,6 +36,7 @@ function KacklaEmoticonButtonMixin:OnLoad()
     end)
 end
 
+-- Shows what the button does
 function KacklaEmoticonButtonMixin:OnEnter()
     GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
     GameTooltip_SetTitle(GameTooltip, "kackla emoticons")
@@ -41,6 +44,7 @@ function KacklaEmoticonButtonMixin:OnEnter()
     GameTooltip:Show()
 end
 
+-- Hides the tooltip from OnEnter
 function KacklaEmoticonButtonMixin:OnLeave()
     GameTooltip:Hide()
 end
@@ -67,6 +71,8 @@ local function AddEntry(rootDescription, label, text, tooltipLines)
     end)
 end
 
+-- Fills the menu with the raid icons followed by the emoticons, in a grid of
+-- PICKER_ROWS rows
 function KacklaEmoticonButtonMixin:CreateEntries(rootDescription)
     rootDescription:SetTag("MENU_KACKLA_EMOTICONS")
 
