@@ -1,4 +1,8 @@
-ADDON_FILES=$(filter-out %.test.lua,$(wildcard *.lua)) $(wildcard *.toc) $(wildcard *.xml)
+# Tests are the *.test.lua files, testsetup.lua is their shared setup
+TEST_FILES=$(wildcard *.test.lua)
+ADDON_FILES=$(filter-out %.test.lua testsetup.lua,$(wildcard *.lua)) $(wildcard *.toc) $(wildcard *.xml)
+# e.g. make test LUA=lua5.1, WoW runs Lua 5.1
+LUA=lua
 WOW_INTERFACE_DIR=/tmp/WoW/Interface/Addons
 
 -include personal.mak
@@ -9,8 +13,12 @@ all: ${ADDON_FILES}
 	mkdir -p ${KACKLA_DIR}
 	cp $? ${KACKLA_DIR}
 
+# Runs each test file in its own Lua, stopping at the first failure
 test:
-	lua kackla.test.lua
+	@for file in ${TEST_FILES}; do \
+		echo "== $$file"; \
+		${LUA} $$file || exit 1; \
+	done
 
 # Release files for a GitHub release, upload both as release assets so
 # strongbox can install it: dist/kackla-VERSION.zip and dist/release.json
