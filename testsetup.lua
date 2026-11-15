@@ -33,6 +33,13 @@ function GetChannelName(channel)
     end
     return 0, nil
 end
+-- Mock clock, tests set now
+now = 0
+GetTime = function() return now end
+-- Mock of the chat frame utilities colors.lua registers its filters with
+ChatFrameUtil = {
+    AddMessageEventFilter = function(event, callback) end,
+}
 SlashCmdList = {}
 registeredEvents = {}
 
@@ -58,6 +65,7 @@ require("cobs")
 require("uper")
 require("messages")
 require("comm")
+require("colors")
 require("kackla")
 require("emoticonpicker")
 require("settings")

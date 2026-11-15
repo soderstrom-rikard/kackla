@@ -156,6 +156,31 @@ Here are some common once.
 | 32                | space character       |
 | 37                | procent % character   |
 
+## Colors
+
+Color tokens color the text after them, for everyone with kackla. Players
+without kackla see the message without the tokens.
+
+```txt
+/g loot: :#epic:Thunderfury:#: is mine
+/p :#red:pull:#: in 10, :#ff8000:stay out of fire
+```
+
+| Token | Color |
+| :--------- | :-------- |
+| `:#red:` | a basic color: red, green, blue, yellow, orange, purple, pink, cyan, white, gray, black |
+| `:#mage:` | a class color: warrior, paladin, hunter, rogue, priest, deathknight, shaman, mage, warlock, monk, druid, demonhunter, evoker |
+| `:#epic:` | an item quality color: poor, common, uncommon, rare, epic, legendary, artifact, heirloom |
+| `:#ff8000:` | a hex color, also short as `:#f80:` |
+| `:#:` | back to the channel's color |
+
+Colors work in guild, officer, party, raid, instance, whisper and custom
+channels, not in say, yell or emotes, where the tokens are just removed.
+
+The Colors tab of the ☺ picker (below the chat menu button) inserts the
+named colors. Any other color can be picked on the color wheel in the
+settings window (`/kackla` or right-click ☺), which inserts its hex token.
+
 ## Bumping version
 
 ```

@@ -166,8 +166,9 @@ function kacklaFrameMixin:IsChannelActive(chatType, target)
 end
 
 -- The SendChatMessage hook. In channels where the alias is used the message
--- is formatted with the alias and its emoticon shortcuts are replaced, other
--- messages are sent unchanged by the original SendChatMessage.
+-- is formatted with the alias and its emoticon shortcuts are replaced. In
+-- every channel its color tokens are removed and sent as colors
+-- (colors.lua), then the message is sent by the original SendChatMessage.
 function kacklaFrameMixin:SendChatMessage(msg, channel, language, target)
     if not self.hooks["SendChatMessage"] then
         error("We shouldn't be able to reach our own hook without having it registered")
@@ -175,16 +176,16 @@ function kacklaFrameMixin:SendChatMessage(msg, channel, language, target)
     end
 
     -- the alias and emoticons are only used in the active channels
-    if not self:IsChannelActive(channel, target) then
-        return self.hooks["SendChatMessage"](msg, channel, language, target)
+    if self:IsChannelActive(channel, target) then
+        local alias, format = self:GetAliasAndFormat()
+        -- replaced after formatting, so shortcuts in the alias and format work too
+        msg = kacklaReplaceEmoticons(string.format(format, alias, msg))
     end
 
-    -- self.hooks["SendChatMessage"]("<Sodrik> " .. msg, channel, language, target)
-    local alias, format = self:GetAliasAndFormat()
-    -- replaced after formatting, so shortcuts in the alias and format work too
-    local aliasFormattedMessage = kacklaReplaceEmoticons(string.format(format, alias, msg))
-
-    self.hooks["SendChatMessage"](aliasFormattedMessage, channel, language, target)
+    -- last, so the color positions are those of the text that is sent
+    local text, spans = kacklaColors.parse(msg)
+    kacklaColors.send(text, spans, channel, target)
+    self.hooks["SendChatMessage"](text, channel, language, target)
 end
 
 -- Returns a 32x32 |T texture escape showing the atlas name, scaled by sx and
@@ -552,6 +553,7 @@ function kacklaFrameMixin:OnLoad()
         end,
         C_ChatInfo)
     kacklaComm.init()
+    kacklaColors.init()
     self:RegisterEvent("ADDON_LOADED")
     self:RegisterEvent("PLAYER_LOGIN")
     self:RegisterEvent("PLAYER_LOGOUT")

@@ -8,6 +8,7 @@
   <Script File="uper.lua"/>
   <Script File="messages.lua"/>
   <Script File="comm.lua"/>
+  <Script File="colors.lua"/>
   <Script File="kackla.lua"/>
   <Script File="emoticonpicker.lua"/>
   <Script File="settings.lua"/>
@@ -18,8 +19,8 @@
      <OnLoad method="OnLoad"/>
    </Scripts>
   </Frame>
-  <!-- Emoticon picker, placed like Blizzard's ChatFrameMenuButton just below it -->
-  <DropdownButton name="KacklaEmoticonButton" frameStrata="MEDIUM" parent="ChatFrame1ButtonFrame" mixin="KacklaEmoticonButtonMixin">
+  <!-- The picker button, placed like Blizzard's ChatFrameMenuButton just below it -->
+  <Button name="KacklaEmoticonButton" frameStrata="MEDIUM" parent="ChatFrame1ButtonFrame" mixin="KacklaEmoticonButtonMixin">
    <Size x="32" y="32"/>
    <Anchors>
      <Anchor point="TOP" relativeTo="ChatFrameMenuButton" relativePoint="BOTTOM"/>
@@ -38,7 +39,74 @@
      <OnLeave method="OnLeave"/>
      <OnClick method="OnClick"/>
    </Scripts>
-  </DropdownButton>
+  </Button>
+  <!-- An entry of the picker, see KacklaPickerEntryMixin -->
+  <Button name="KacklaPickerEntryTemplate" mixin="KacklaPickerEntryMixin" virtual="true">
+   <Size x="26" y="26"/>
+   <Layers>
+     <!-- a gray border around the swatch, so dark colors stay visible -->
+     <Layer level="BORDER">
+       <Texture parentKey="SwatchBorder" hidden="true">
+         <Anchors>
+           <Anchor point="TOPLEFT" x="3" y="-3"/>
+           <Anchor point="BOTTOMRIGHT" x="-3" y="3"/>
+         </Anchors>
+         <Color r="0.5" g="0.5" b="0.5"/>
+       </Texture>
+     </Layer>
+     <Layer level="ARTWORK">
+       <Texture parentKey="Swatch" hidden="true">
+         <Anchors>
+           <Anchor point="TOPLEFT" x="4" y="-4"/>
+           <Anchor point="BOTTOMRIGHT" x="-4" y="4"/>
+         </Anchors>
+       </Texture>
+     </Layer>
+   </Layers>
+   <HighlightTexture file="Interface\Buttons\UI-Common-MouseHilight" alphaMode="ADD"/>
+   <ButtonText parentKey="Label"/>
+   <!-- the chat font has the emoticon symbols, menu fonts show boxes -->
+   <NormalFont style="ChatFontNormal"/>
+   <Scripts>
+     <OnClick method="OnClick"/>
+     <OnEnter method="OnEnter"/>
+     <OnLeave method="OnLeave"/>
+   </Scripts>
+  </Button>
+  <!-- The picker window, opened by the picker button, see KacklaPickerMixin -->
+  <Frame name="KacklaPickerFrame" parent="UIParent" inherits="BasicFrameTemplateWithInset, TabSystemOwnerTemplate" mixin="KacklaPickerMixin"
+         toplevel="true" enableMouse="true" clampedToScreen="true" frameStrata="DIALOG" hidden="true">
+   <Size x="200" y="200"/>
+   <Anchors>
+     <Anchor point="BOTTOMLEFT" relativeTo="KacklaEmoticonButton" relativePoint="TOPRIGHT" y="24"/>
+   </Anchors>
+   <Frames>
+     <Frame parentKey="TabSystem" inherits="TabSystemTemplate">
+       <KeyValues>
+         <KeyValue key="minTabWidth" value="100" type="number"/>
+       </KeyValues>
+       <Anchors>
+         <Anchor point="TOPLEFT" relativeKey="$parent" relativePoint="BOTTOMLEFT" x="12" y="2"/>
+       </Anchors>
+     </Frame>
+     <Frame parentKey="Emoticons" hidden="true">
+       <Size x="1" y="1"/>
+       <Anchors>
+         <Anchor point="TOPLEFT" x="12" y="-32"/>
+       </Anchors>
+     </Frame>
+     <Frame parentKey="Colors" hidden="true">
+       <Size x="1" y="1"/>
+       <Anchors>
+         <Anchor point="TOPLEFT" x="12" y="-32"/>
+       </Anchors>
+     </Frame>
+   </Frames>
+   <Scripts>
+     <OnLoad method="OnLoad"/>
+     <OnShow method="OnShow"/>
+   </Scripts>
+  </Frame>
   <!-- Edit box of the settings window, see KacklaSettingsEditBoxMixin -->
   <EditBox name="KacklaSettingsEditBoxTemplate" inherits="InputBoxTemplate" mixin="KacklaSettingsEditBoxMixin" autoFocus="false" virtual="true">
    <Size x="160" y="20"/>
@@ -52,7 +120,7 @@
        emoticon button. Rows are settings, columns global and this character. -->
   <Frame name="KacklaSettingsFrame" parent="UIParent" inherits="BasicFrameTemplateWithInset" mixin="KacklaSettingsMixin"
          toplevel="true" movable="true" enableMouse="true" clampedToScreen="true" frameStrata="DIALOG" hidden="true">
-   <Size x="490" y="270"/>
+   <Size x="490" y="450"/>
    <Anchors>
      <Anchor point="CENTER"/>
    </Anchors>
@@ -96,6 +164,24 @@
         <FontString parentKey="Channels" inherits="GameFontHighlight" justifyH="LEFT" wordwrap="false">
           <Size x="360" y="0"/>
           <Anchors><Anchor point="TOPLEFT" x="100" y="-238"/></Anchors>
+        </FontString>
+        <!-- the color picker, see KacklaSettingsMixin:OnColorSelect -->
+        <FontString inherits="GameFontNormal" text="Color picker">
+          <Anchors><Anchor point="TOPLEFT" x="16" y="-268"/></Anchors>
+        </FontString>
+        <FontString inherits="GameFontHighlightSmall" justifyH="LEFT" text="Pick a color and insert its token into your chat message">
+          <Anchors><Anchor point="TOPLEFT" x="16" y="-286"/></Anchors>
+        </FontString>
+        <Texture parentKey="ColorSwatch">
+          <Size x="64" y="32"/>
+          <Anchors><Anchor point="TOPLEFT" x="220" y="-306"/></Anchors>
+        </Texture>
+        <FontString inherits="GameFontNormal" text="Hex">
+          <Anchors><Anchor point="TOPLEFT" x="220" y="-354"/></Anchors>
+        </FontString>
+        <!-- the chat font, like the tokens in chat -->
+        <FontString parentKey="ColorToken" inherits="ChatFontNormal" justifyH="LEFT">
+          <Anchors><Anchor point="TOPLEFT" x="220" y="-382"/></Anchors>
         </FontString>
      </Layer>
    </Layers>
@@ -178,6 +264,43 @@
         </KeyValues>
         <Anchors><Anchor point="TOPLEFT" x="306" y="-130"/></Anchors>
       </EditBox>
+      <!-- Blizzard's color wheel (hue and saturation) and value bar -->
+      <ColorSelect parentKey="ColorPicker">
+        <Size x="180" y="128"/>
+        <Anchors><Anchor point="TOPLEFT" x="16" y="-306"/></Anchors>
+        <ColorWheelTexture parentKey="Wheel">
+          <Size x="128" y="128"/>
+          <Anchors><Anchor point="TOPLEFT"/></Anchors>
+        </ColorWheelTexture>
+        <ColorWheelThumbTexture parentKey="WheelThumb" file="Interface\Buttons\UI-ColorPicker-Buttons">
+          <Size x="10" y="10"/>
+          <TexCoords left="0" right="0.15625" top="0" bottom="0.625"/>
+        </ColorWheelThumbTexture>
+        <ColorValueTexture parentKey="Value">
+          <Size x="24" y="128"/>
+          <Anchors><Anchor point="LEFT" relativeKey="$parent.Wheel" relativePoint="RIGHT" x="20"/></Anchors>
+        </ColorValueTexture>
+        <ColorValueThumbTexture parentKey="ValueThumb" file="Interface\Buttons\UI-ColorPicker-Buttons">
+          <Size x="36" y="14"/>
+          <TexCoords left="0.25" right="1.0" top="0" bottom="0.875"/>
+        </ColorValueThumbTexture>
+      </ColorSelect>
+      <EditBox parentKey="ColorHex" inherits="InputBoxTemplate" mixin="KacklaColorHexMixin" autoFocus="false" letters="7">
+        <Size x="80" y="20"/>
+        <Anchors><Anchor point="TOPLEFT" x="256" y="-350"/></Anchors>
+        <Scripts>
+          <OnEnterPressed method="OnEnterPressed"/>
+          <OnEscapePressed method="OnEscapePressed"/>
+          <OnEditFocusLost method="OnEditFocusLost"/>
+        </Scripts>
+      </EditBox>
+      <Button inherits="UIPanelButtonTemplate" text="Insert in chat">
+        <Size x="120" y="22"/>
+        <Anchors><Anchor point="TOPLEFT" x="220" y="-406"/></Anchors>
+        <Scripts>
+          <OnClick>self:GetParent():InsertColor()</OnClick>
+        </Scripts>
+      </Button>
    </Frames>
    <Scripts>
      <OnLoad method="OnLoad"/>

@@ -20,6 +20,9 @@ local SET_COMMANDS = {
 -- The message shown in the preview
 local PREVIEW_MESSAGE = "Hello :smile:"
 
+-- The color picker's first color, 0xRRGGBB
+local START_COLOR = 0xFF8000
+
 -- Shows or hides the settings window
 function kacklaToggleSettings()
     KacklaSettingsFrame:SetShown(not KacklaSettingsFrame:IsShown())
@@ -128,11 +131,48 @@ function KacklaSettingsMixin:GetChannelsText()
     return kacklaChannelsToCsv(kacklaFrame:GetChannels()) or "ALL"
 end
 
--- Closes with escape, and can be dragged by its title bar
+-- Closes with escape, can be dragged by its title bar, and starts the color
+-- picker with START_COLOR
 function KacklaSettingsMixin:OnLoad()
     table.insert(UISpecialFrames, self:GetName())
     self.TitleText:SetText("kackla settings")
     self:RegisterForDrag("LeftButton")
+    self.ColorPicker:SetScript("OnColorSelect", function(_, r, g, b)
+        self:OnColorSelect(r, g, b)
+    end)
+    self:SetColor(START_COLOR)
+end
+
+-- Shows the color picked on the wheel: swatch, hex and token
+function KacklaSettingsMixin:OnColorSelect(r, g, b)
+    self.color = kacklaColors.join(r, g, b)
+    self.ColorSwatch:SetColorTexture(r, g, b)
+    self.ColorToken:SetText(kacklaColors.hexToken(self.color))
+    if not self.ColorHex:HasFocus() then
+        self.ColorHex:SetText(string.format("%06x", self.color))
+    end
+end
+
+-- Picks rgb, a 0xRRGGBB number, on the wheel and everywhere else
+function KacklaSettingsMixin:SetColor(rgb)
+    local r, g, b = kacklaColors.split(rgb)
+    self.ColorPicker:SetColorRGB(r, g, b)
+    self:OnColorSelect(r, g, b)
+end
+
+-- Picks the color typed in the hex box: a hex color or any color token name,
+-- e.g. "ff8000", "#f80", ":#epic:" or "mage". Anything else shows the
+-- current color again.
+function KacklaSettingsMixin:ApplyColorText(text)
+    local name = string.match(text, "^[%s:#]*(%w+)[%s:]*$")
+    local color = name and kacklaColors.tokenColor(name)
+    local rgb = color and kacklaColors.rgbOf(color)
+    self:SetColor(rgb or self.color)
+end
+
+-- Inserts the picked color's token into the chat message being typed
+function KacklaSettingsMixin:InsertColor()
+    kacklaInsertIntoChat(kacklaColors.hexToken(self.color))
 end
 
 -- Shows the stored values each time the window opens
@@ -215,4 +255,24 @@ end
 -- Hides the tooltip from OnEnter
 function KacklaSettingsOverrideMixin:OnLeave()
     GameTooltip:Hide()
+end
+
+-- The hex box of the color picker
+KacklaColorHexMixin = {}
+
+-- Leaving the hex box picks what was typed
+function KacklaColorHexMixin:OnEnterPressed()
+    self:ClearFocus()
+end
+
+-- Shows the picked color again, ClearFocus then picks it unchanged
+function KacklaColorHexMixin:OnEscapePressed()
+    self:SetText(string.format("%06x", self:GetParent().color))
+    self:ClearFocus()
+end
+
+-- Picks what was typed
+function KacklaColorHexMixin:OnEditFocusLost()
+    EditBox_ClearHighlight(self)
+    self:GetParent():ApplyColorText(self:GetText())
 end

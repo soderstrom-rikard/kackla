@@ -1,6 +1,6 @@
 # Communication layer design
 
-Status: the layer is implemented, chat colors are not yet.
+Status: the layer and chat colors are implemented.
 
 | File | Content |
 | :-- | :-- |
@@ -9,6 +9,7 @@ Status: the layer is implemented, chat colors are not yet.
 | `uper.lua` | the uPER encoder and decoder |
 | `cobs.lua` | COBS |
 | `comm.lua` | framing, reassembly, the send queue and handlers (`kacklaComm.send`, `kacklaComm.on`) |
+| `colors.lua` | chat colors: tokens, sending, the chat filter and recoloring |
 
 kackla-to-kackla messages sent as hidden addon messages, so kackla can add
 things to chat (first of all colors) that players without kackla never see.
@@ -171,10 +172,10 @@ END
 
 ## Chat colors: matching chat and addon messages
 
-Colors are only used in kackla's active channels (setChannels and
-setPlayerChannels), like the alias and emoticons. In an active channel whose
-chat type doesn't allow addon messages, the color tokens are removed and the
-message is sent without colors.
+Unlike the alias and emoticons, colors work in every channel, active or
+not: players with kackla see them, everyone else sees the message without
+the tokens. In chat types that can't carry addon messages (SAY, YELL,
+EMOTE) the tokens are removed and the message is sent without colors.
 
 Sending:
 
