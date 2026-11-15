@@ -56,6 +56,7 @@ require("emoticons")
 require("kackla")
 require("emoticonpicker")
 require("settings")
+require("copybox")
 
 sut = kacklaFrameMixin
 -- the settings window calls the addon through its frame

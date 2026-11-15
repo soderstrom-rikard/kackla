@@ -6,6 +6,7 @@
   <Script File="kackla.lua"/>
   <Script File="emoticonpicker.lua"/>
   <Script File="settings.lua"/>
+  <Script File="copybox.lua"/>
   <Frame name="kacklaFrame" mixin="kacklaFrameMixin">
    <Scripts>
      <OnEvent method="OnEvent"/>
@@ -176,6 +177,45 @@
    <Scripts>
      <OnLoad method="OnLoad"/>
      <OnShow method="OnShow"/>
+     <OnDragStart method="OnDragStart"/>
+     <OnDragStop method="OnDragStop"/>
+   </Scripts>
+  </Frame>
+  <!-- Text ready to copy, see copybox.lua -->
+  <Frame name="KacklaCopyBoxFrame" parent="UIParent" inherits="BasicFrameTemplateWithInset" mixin="KacklaCopyBoxMixin"
+         toplevel="true" movable="true" enableMouse="true" clampedToScreen="true" frameStrata="DIALOG" hidden="true">
+   <Size x="520" y="360"/>
+   <Anchors>
+     <Anchor point="CENTER"/>
+   </Anchors>
+   <Layers>
+     <Layer level="ARTWORK">
+        <FontString inherits="GameFontHighlightSmall" text="Ctrl+C copies the selected text">
+          <Anchors><Anchor point="BOTTOMLEFT" x="16" y="12"/></Anchors>
+        </FontString>
+     </Layer>
+   </Layers>
+   <Frames>
+     <ScrollFrame parentKey="Scroll" inherits="InputScrollFrameTemplate">
+       <KeyValues>
+         <KeyValue key="maxLetters" value="0" type="number"/>
+         <KeyValue key="hideCharCount" value="true" type="boolean"/>
+       </KeyValues>
+       <Anchors>
+         <Anchor point="TOPLEFT" x="16" y="-34"/>
+         <Anchor point="BOTTOMRIGHT" x="-32" y="32"/>
+       </Anchors>
+     </ScrollFrame>
+     <Button inherits="UIPanelButtonTemplate" text="Select all">
+       <Size x="100" y="22"/>
+       <Anchors><Anchor point="BOTTOMRIGHT" x="-10" y="6"/></Anchors>
+       <Scripts>
+         <OnClick>self:GetParent():SelectText()</OnClick>
+       </Scripts>
+     </Button>
+   </Frames>
+   <Scripts>
+     <OnLoad method="OnLoad"/>
      <OnDragStart method="OnDragStart"/>
      <OnDragStop method="OnDragStop"/>
    </Scripts>
