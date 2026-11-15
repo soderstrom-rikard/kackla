@@ -3,6 +3,11 @@
     xsi:schemaLocation="http://www.blizzard.com/wow/ui/
     ..\..\FrameXML\UI.xsd">
   <Script File="emoticons.lua"/>
+  <!-- the communication layer, see docs/communication-layer.md -->
+  <Script File="cobs.lua"/>
+  <Script File="uper.lua"/>
+  <Script File="messages.lua"/>
+  <Script File="comm.lua"/>
   <Script File="kackla.lua"/>
   <Script File="emoticonpicker.lua"/>
   <Script File="settings.lua"/>

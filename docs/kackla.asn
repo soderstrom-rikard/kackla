@@ -1,0 +1,63 @@
+-- The messages kackla sends to other kackla clients as addon messages, see
+-- docs/communication-layer.md. This module is the source of truth,
+-- messages.lua describes the same types for uper.lua and must match it.
+--
+-- Encoded with the UNALIGNED Packed Encoding Rules (uPER, ITU-T X.691).
+--
+-- Versioning rules: within a protocol version only add after the extension
+-- markers (...). Never reorder, remove or change existing items, increase
+-- the protocol version (the first byte of each frame) instead.
+
+Kackla DEFINITIONS AUTOMATIC TAGS ::= BEGIN
+
+-- Follows the protocol version byte in every frame
+FrameHeader ::= SEQUENCE {
+    messageId      INTEGER (0..255),  -- per sender, wraps around
+    fragmentIndex  INTEGER (0..15),
+    lastFragment   BOOLEAN
+}
+
+-- The content of a message, split over the frames that share a messageId
+Message ::= CHOICE {
+    chatColors  ChatColors,
+    ...
+}
+
+-- Colors for a chat message the sender sent, "from here on" spans
+ChatColors ::= SEQUENCE {
+    textHash  INTEGER (0..65535),  -- hash of the sent chat text
+    spans     SEQUENCE (SIZE (1..32)) OF ColorSpan,
+    ...
+}
+
+ColorSpan ::= SEQUENCE {
+    start  INTEGER (0..255),  -- byte offset in the sent chat text
+    color  Color
+}
+
+Color ::= CHOICE {
+    reset    NULL,                       -- back to the channel's color
+    rgb      INTEGER (0..16777215),      -- 0xRRGGBB
+    named    NamedColor,
+    class    ClassColor,
+    quality  ItemQuality,
+    ...
+}
+
+NamedColor ::= ENUMERATED {
+    red, green, blue, yellow, orange, purple, pink, cyan, white, gray, black,
+    ...
+}
+
+ClassColor ::= ENUMERATED {
+    warrior, paladin, hunter, rogue, priest, deathKnight, shaman, mage,
+    warlock, monk, druid, demonHunter, evoker,
+    ...
+}
+
+ItemQuality ::= ENUMERATED {
+    poor, common, uncommon, rare, epic, legendary, artifact, heirloom,
+    ...
+}
+
+END

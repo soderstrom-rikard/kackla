@@ -327,14 +327,19 @@ function kacklaFrameMixin:PLAYER_LOGOUT()
     return
 end
 
+-- Addon messages go to the communication layer (comm.lua)
+function kacklaFrameMixin:CHAT_MSG_ADDON(prefix, text, chatType, sender)
+    kacklaComm.onAddonMessage(prefix, text, chatType, sender)
+end
+
 -- Calls the method named after the event, e.g. self:ADDON_LOADED(...)
 function kacklaFrameMixin:OnEvent(event, ...)
     self[event](self, ...)
 end
 
 -- Initializes kackla when its frame (kackla.xml) loads: sets up the chat
--- types and slash commands, registers /kackla, hooks SendChatMessage and
--- registers the events
+-- types and slash commands, registers /kackla, hooks SendChatMessage,
+-- registers kackla's addon message prefix and the events
 function kacklaFrameMixin:OnLoad()
     local playerFirstName, playerLastName = UnitName("player")
     local playerFullName = playerFirstName .. " " .. playerLastName
@@ -546,7 +551,9 @@ function kacklaFrameMixin:OnLoad()
             self:SendChatMessage(msg, channel, language, target)
         end,
         C_ChatInfo)
+    kacklaComm.init()
     self:RegisterEvent("ADDON_LOADED")
     self:RegisterEvent("PLAYER_LOGIN")
     self:RegisterEvent("PLAYER_LOGOUT")
+    self:RegisterEvent("CHAT_MSG_ADDON")
 end

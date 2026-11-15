@@ -1,6 +1,14 @@
 # Communication layer design
 
-Status: draft, nothing is implemented yet.
+Status: the layer is implemented, chat colors are not yet.
+
+| File | Content |
+| :-- | :-- |
+| `docs/kackla.asn` | the messages in ASN.1, the source of truth |
+| `messages.lua` | the same types as `uper.lua` type descriptions |
+| `uper.lua` | the uPER encoder and decoder |
+| `cobs.lua` | COBS |
+| `comm.lua` | framing, reassembly, the send queue and handlers (`kacklaComm.send`, `kacklaComm.on`) |
 
 kackla-to-kackla messages sent as hidden addon messages, so kackla can add
 things to chat (first of all colors) that players without kackla never see.
@@ -104,8 +112,8 @@ FrameHeader ::= SEQUENCE {
 
 ## Messages
 
-The ASN.1 module, to be kept in the repo (e.g. `docs/kackla.asn`) as the
-source of truth for the encoder and decoder:
+The ASN.1 module, kept in `docs/kackla.asn` as the source of truth for the
+encoder and decoder:
 
 ```asn1
 Kackla DEFINITIONS AUTOMATIC TAGS ::= BEGIN

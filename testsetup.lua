@@ -5,6 +5,7 @@
 
 _G = {}
 C_ChatInfo = {
+    RegisterAddonMessagePrefix = function(prefix) return 0 end,
     SendChatMessage = function(msg, channel, language, target)
         error("we are running the non-hooked SendChatInfo")
     end
@@ -53,6 +54,10 @@ function UnitName(unit)
 end
 
 require("emoticons")
+require("cobs")
+require("uper")
+require("messages")
+require("comm")
 require("kackla")
 require("emoticonpicker")
 require("settings")
