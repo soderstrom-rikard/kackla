@@ -4,53 +4,7 @@ Kackla is a minimal wow-addon that aims at helping with social interactions.
 
 ## Versions
 
-Newest first.
-
-### 0.0.7
-
-- Added a settings window for the alias, format and channels, globally and
-  per character, with a preview of how your messages will look
-- Open it with a bare `/kackla` or by right-clicking the ☺ button, the help
-  is now `/kackla help`
-- The settings window refuses formats that would drop your message, such as
-  an empty format or a single `%s`
-- Releases come with a `release.json`, so addon managers such as strongbox,
-  WowUp, CurseBreaker and instawow can install kackla from GitHub
-- Split the tests into one file per Lua file, `make test` runs them all
-
-### 0.0.6
-
-- Added `:name:` emoticon shortcuts (e.g. `:heart:` ♥, `:smile:` ☺) that are
-  replaced with their symbol in channels where the alias is used, so other
-  players see them without any addon
-- List them with `/kackla emoticons`
-- Pick emoticons and raid icons from the new ☺ button below the chat menu
-  button
-
-### 0.0.5
-
-- Added `setChannels`, `getChannels`, `setPlayerChannels` and
-  `getPlayerChannels` to limit the alias to chosen chat types (SAY, GUILD, …)
-  and custom channels
-- `setPlayerChannels ALL` lets a character use the alias in all channels even
-  when the global channels are restricted
-
-### 0.0.4
-
-- Simplified setting the format using slash command
-
-### 0.0.3
-
-- Added kackla.test.lua for simplified testing
-
-### 0.0.2
-
-- Added `kackla help` to be able to list commands and usage in game
-- Added .editorconfig
-
-### 0.0.1
-
-- Adds customizable prompts (similiar to Identity2)
+The changes in each version are listed in [ChangeLog.md](ChangeLog.md).
 
 ## Installation
 
@@ -61,16 +15,6 @@ that install from GitHub releases can install and update kackla from the reposit
 
 You can also download the zip from the latest release and extract it into your Interface/AddOns
 World of Warcraft directory, it contains the `kackla` folder.
-
-## Making a release
-
-```
-make dist
-```
-
-This runs the tests and creates `dist/kackla-VERSION.zip` and `dist/release.json`, the version and the
-interface numbers are read from the .toc files. Create a GitHub release (not a draft or pre-release) and
-attach both files as release assets.
 
 Once installed you likely want to run
 
@@ -86,6 +30,16 @@ If you have a character where you don't want an alias, log into it and run
 /kackla setPlayerAlias
 /kackla setPlayerFormat %s%s
 ```
+
+## Making a release
+
+```
+make dist
+```
+
+This runs the tests and creates `dist/kackla-VERSION.zip` and `dist/release.json`, the version and the
+interface numbers are read from the .toc files. Create a GitHub release (not a draft or pre-release) and
+attach both files as release assets.
 
 ## Commands
 
@@ -186,3 +140,5 @@ settings window (`/kackla` or right-click ☺), which inserts its hex token.
 ```
 sed -i 's/## Version: [0-9.]\+/## Version: 0.0.3/g' kackla*.toc
 ```
+
+and add a section for the new version at the top of [ChangeLog.md](ChangeLog.md).
